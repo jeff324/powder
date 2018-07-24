@@ -58,7 +58,7 @@ ml1 = marginal_likelihood(pow.out.null)
 This will produce a data frame with the following format (note the values are for illustration only):
 
 ```{r,echo=FALSE}
-load('example_output.RData')
+load('vignettes/example_output.RData')
 ```
 
 ```{r ml}
