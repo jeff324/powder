@@ -73,3 +73,18 @@ print(ml1)
     ## 5 Log Steppingstone 1036.3150
 
 The Steppingstone estimate will usually be `Inf` because of underflow. Use the log steppingstone estimate instead.
+
+References:
+-----------
+
+-   Brown, S. D., & Heathcote, A. (2008). The simplest complete model of choice response time: Linear ballistic accumulation. Cognitive Psychology, 57(3), 153–178. <http://doi.org/10.1016/j.cogpsych.2007.12.002>
+
+-   Evans, N. J., & Brown, S. D. (2017). Bayes factors for the Linear Ballistic Accumulator Model of decision-making. Behavior Research Methods, Advance online publication.
+
+-   Friel, N., & Pettitt, A. N. (2008). Marginal likelihood estimation via power posteriors. Journal of the Royal Statistical Society. Series B: Statistical Methodology, 70(3), 589–607. <http://doi.org/10.1111/j.1467-9868.2007.00650.x>
+
+-   Friel, N., & Wyse, J. (2012). Estimating the evidence - A review. Statistica Neerlandica, 66(3), 288–308. <http://doi.org/10.1111/j.1467-9574.2011.00515.x>
+
+-   Lartillot, N., & Philippe, H. (2006). Computing Bayes factors using thermodynamic integration. Systematic Biology, 55(2), 195–207. <http://doi.org/10.1080/10635150500433722>
+
+-   Xie, W., Lewis, P. O., Fan, Y., Kuo, L., & Chen, M. H. (2011). Improving marginal likelihood estimation for bayesian phylogenetic model selection. Systematic Biology, 60(2), 150–160. <http://doi.org/10.1093/sysbio/syq085>
