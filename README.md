@@ -7,6 +7,11 @@ powder
 
 When presented with several competing formal models, one is required to select between these different explanations: a process commonly known as model selection. One of the more robust methods of performing model selection is through Bayes factors. However, Bayes factors require the computation of the marginal likelihood for each model, which, in turn, requires integrating over the entire parameter space. This makes the estimation of the Bayes factor for models with more than a few dimensions problematic for numerical integration techniques. Early Monte Carlo methods such as arithmetic/harmonic mean estimators or reversible-jump MCMC have been used with some success, but still face problems (Friel & Wyse, 2012). Other solutions exist, such as using GPUs (Evans & Brown, 2017), but are challenging to implement and are done on a model-by-model basis. In this vignette, we present two recent advancements, thermodynamic integration (Friel & Pettitt, 2008; Lartillot & Philippe, 2006) and stepping stone sampling (Xie, Lewis, Fan, Kuo, & Chen, 2011), and show how the `powder` package is used to estimate them. We use the Linear Ballistic Accumulator model (Brown & Heathcote, 2008) as an example.
 
+Code
+----
+
+The underlying code that does DE-MCMC was initially developed by Scott Brown (Newcastle), Nathan Evans (UVA), and others (please contact me if I've left you out). `powder` extends this code to power posteriors and acts as a wrapper to make life easier.
+
 Installing powder
 -----------------
 
