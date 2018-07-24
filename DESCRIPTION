@@ -1,0 +1,21 @@
+Package: powder
+Type: Package
+Title: Power posterior sampling via differential evolution
+Version: 0.1.0
+Author: Jeffrey Annis
+Maintainer: Jeffrey Annis <jannis@mail.usf.edu>
+Description: Samples from power posteriors via differential evolution. The samples
+    are then used to estimate the marginal likelihood. Posterior estimation (power=1)
+    is also available. The package includes the Linear Ballistic Accumulator model as an example, 
+    but can be extended to sample from any model. 
+License: GPL-3
+Encoding: UTF-8
+LazyData: true
+Imports:
+     modules,
+     msm,
+     R6
+RoxygenNote: 6.0.1
+Suggests: knitr,
+    rmarkdown
+VignetteBuilder: knitr

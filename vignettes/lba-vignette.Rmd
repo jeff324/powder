@@ -1,0 +1,106 @@
+---
+title: "Estimating marginal likelihoods for the LBA with powder"
+author: "Jeffrey Annis"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Vignette Title}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+When presented with several competing formal models, one is required to select between these different explanations: a process commonly known as model selection. One of the more robust methods of performing model selection is through Bayes factors. However, Bayes factors require the computation of the marginal likelihood for each model, which, in turn, requires integrating over the entire parameter space. This makes the estimation of the Bayes factor for models with more than a few dimensions problematic for numerical integration techniques. Early Monte Carlo methods such as arithmetic/harmonic mean estimators or reversible-jump MCMC have been used with some success, but still face problems (Friel & Wyse, 2012). Other solutions exist, such as using GPUs (Evans & Brown, 2017), but are challenging to implement and are done on a model-by-model basis. In this vignette, we present two recent advancements, thermodynamic integration (Friel & Pettitt, 2008; Lartillot & Philippe, 2006) and stepping stone sampling (Xie, Lewis, Fan, Kuo, & Chen, 2011), and show how the `powder` package is used to estimate them. We use the Linear Ballistic Accumulator model (Brown & Heathcote, 2008) as an example.
+
+## Bayesian Model Selection
+
+Bayesian model selection is more easily introduced by considering the more familiar case of Bayesian parameter estimation. Recall Bayes' rule defines the posterior distribution as:
+
+\begin{equation}
+p(\boldsymbol{\theta} |\boldsymbol{D},\mathcal{M}) = \frac{p(\boldsymbol{D} | \boldsymbol{\theta},\mathcal{M} ) p(\boldsymbol{\theta}|\mathcal{M})}{p(\boldsymbol{D}|\mathcal{M})}
+\end{equation}
+
+where $p(\boldsymbol{D} | \boldsymbol{\theta},\mathcal{M})$ is the likelihood function, $p(\boldsymbol{\theta}|\mathcal{M})$ is the prior probability of the parameters, and $p(\boldsymbol{D}|\mathcal{M})$ is the marginal likelihood found by marginalizing over all possible parameter values. 
+
+While Bayesian parameter estimation is primarily concerned with estimating the posterior distribution, $p(\boldsymbol{\theta}|\boldsymbol{D},\mathcal{M})$, the quantity of interest in Bayesian model selection is the marginal likelihood:
+
+\begin{equation}
+p(\boldsymbol{D}|\mathcal{M}) = \int_{}^{} p(\boldsymbol{D} | \boldsymbol{\theta}) p(\boldsymbol{\theta})\, d\boldsymbol{\theta}
+\end{equation}
+
+After obtaining the marginal likelihood for each model, the Bayes factor, a measure of evidence provided by the data in favor of one model over the other, can then be computed: 
+
+\begin{equation}
+\frac{p(\boldsymbol{D} | \mathcal{M}_1)}{p(\boldsymbol{D} | \mathcal{M}_2)}
+\end{equation}
+
+In most real-world cases, the marginal likelihoods must be obtained via Monte Carlo techniques. We describe thermodynamic integration and steppingstone sampling below:
+
+## Power posteriors
+
+Thermodynamic Integration (TI) and Steppingstone sampling define a set of posterior distributions. The likelihood of each posterior is raised to a power, $t_{j}=\{0,...,1\}$ (called the \textit{temperature}). These new posteriors are referred to as \textit{power posteriors} and are defined as:
+
+\begin{equation}
+p(\boldsymbol{\theta}|\boldsymbol{D},t_{j}) = \frac{p(\boldsymbol{D}|\boldsymbol{\theta})^{t_{j}}p(\boldsymbol{\theta})}{\int_{}^{} p(\boldsymbol{D} | \boldsymbol{\theta})^{t_{j}} p(\boldsymbol{\theta})\, d\boldsymbol{\theta}}
+\end{equation}
+
+## Thermodynamic Integration
+
+After obtaining samples from each power posterior, $\boldsymbol{\theta}_{i,j} \sim p(\boldsymbol{\theta} |\boldsymbol{D},t_{j})$, the average log-likelihoods, $\frac{1}{n} \sum_{i=1}^{n}\ln p(\boldsymbol{D}|\boldsymbol{\theta}_{i,j})$, are computed. These form $k$ points along a one-dimensional curve with respect to $t$, and the area under this curve is an estimate of the marginal likelihood. Since it is a one-dimensional curve, its area is easily estimated with standard numerical integration techniques. \citeA{friel2008marginal} suggest the trapezoidal rule:
+
+\begin{equation}
+p(\boldsymbol{D}) \approx \sum_{j=2}^{k} \frac{t_j-t_{j-1}}{2} \left[\frac{1}{n} \sum_{i=1}^{n}\ln p(\boldsymbol{D}|\boldsymbol{\theta}_{i,j}) +\frac{1}{n} \sum_{i=1}^{n}\ln p(\boldsymbol{D}|\boldsymbol{\theta}_{i,j-1}) \right].
+\end{equation}
+
+## Steppingstone Estimator
+
+The steppingstone estimator is also based on the power posteriors and is written as:
+
+\begin{equation}
+p(\boldsymbol{D}) \approx \prod_{j=1}^{k} \frac{1}{n} \sum_{i=1}^{n} \frac{p(\boldsymbol{D} | \boldsymbol{\theta}_{i,j-1})^{t_{j}}}{p(\boldsymbol{D} | \boldsymbol{\theta}_{i,j-1})^{t_{j-1}}}
+\end{equation}
+
+## Obtaining the power posteriors and estimating the marginal likelihood
+Now that we have an overview of the methods, let's use `powder` to define an LBA model, obtain the power posteriors, and compute the estimates for the marginal likelihood. To define an LBA model that varies threshold across conditions we can do the following:
+
+```{r}
+library(powder)
+model = LBA$new(b=T,conds = c(1,2))
+```
+
+There are many other LBA models that can be defined, but for now we will stick with a simple one. Next, we load our data. This dataset is called "null" and is a simulated dataset from the LBA with two conditions in which no parameters were varied.
+
+```{r,eval=FALSE}
+data('null',package='powder')
+```
+
+Next, we will run the `powder` function to obtain the posterior samples:
+
+```{r,eval=FALSE}
+pow.out.null = powder(data=null, model = model, num.temps = 30, n.samples = 500, burnin=1000, meltin=250)
+```
+
+This runs Differential Evolution MCMC (Turner et al. 2014) over `num.temps` power posteriors, each containing `n.samples` samples after burning in `burnin` samples. It runs each power posterior sequentially, using the last sample of each power posterior as the starting point for the new power posterior. When switching to the next power posterior, it takes time to adapt. We have set the adaptation time to `meltin` iterations. This will take a fairly long time to run. 
+
+Lastly, we can estimate the marginal likelihood with:
+
+```{r,eval=FALSE}
+ml1 = marginal_likelihood(pow.out.null)
+```
+
+This will produce a data frame with the following format (note the values are for illustration only):
+
+```{r,echo=FALSE}
+load('example_output.RData')
+```
+
+```{r ml}
+print(ml1)
+```
+
+The Steppingstone estimate will usually be `Inf` because of underflow. Use the log steppingstone estimate instead.
