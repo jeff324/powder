@@ -10,3 +10,4 @@ crossover(i, n.chains, b, pars, use.theta, use.like, data, hyper, par.names,
 \description{
 Differential Evolution functions
 }
+\keyword{internal}
