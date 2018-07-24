@@ -1,7 +1,7 @@
 #' Differential Evolution functions
 #'
 #' @importFrom stats runif
-
+#' @keywords internal
 crossover=function(i,n.chains,b,pars,use.theta,use.like,data,hyper,par.names,temperature,model){
      #require(msm)
      use.weight=use.like[i]*temperature + model$log.dens.prior(use.theta[i,],hyper[i,])
