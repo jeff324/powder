@@ -56,12 +56,6 @@ powder = function(data,model,num.temps=NULL,alpha=.3,high.temps.first=FALSE,n.se
                   de_params=list(b=.001, migration=FALSE,migration.freq=NULL,migration.start=NULL,migration.end=NULL),
                   n.subj=NULL,n.pars=NULL,n.hpars=NULL,sample.posterior=FALSE,return.samples=TRUE){
 
-     opt = list(num.temps=num.temps,alpha=alpha,high.temps.first=high.temps.first,
-                n.sequences=n.sequences,current.sequence=current.sequence,
-                n.samples=n.samples,n.chains=n.chains,burnin=burnin,meltin=meltin,
-                de_params=de_params,n.subj=n.subj,n.pars=n.pars,n.hpars=n.hpars,
-                sample.posterior=sample.posterior,return.samples=return.samples)
-
      if(is.null(num.temps)){
           num.temps = 30
      }
@@ -71,7 +65,9 @@ powder = function(data,model,num.temps=NULL,alpha=.3,high.temps.first=FALSE,n.se
      }else{
           temperatures = 1
      }
-
+     if(num.temps == 1){
+          temperatures = 1 #default to posterior sampling
+     }
 
      theta.names = model$theta.names
      phi.names = model$phi.names
@@ -112,6 +108,28 @@ powder = function(data,model,num.temps=NULL,alpha=.3,high.temps.first=FALSE,n.se
      if(is.null(n.chains)){
           n.chains = 3*n.pars
      }
+     if(n.samples <= 0){
+          stop('n.samples must be > 0')
+     }
+     if(num.temps <= 0){
+          stop('num.temps must be > 0')
+     }
+     if(burnin <= 0){
+          stop('burnin must be > 0')
+     }
+     if(meltin <= 0){
+          stop('meltin must be > 0')
+     }
+     if(!is.null(n.sequences)){
+          if(n.sequences > num.temps){
+               stop('n.sequences must be <= num.temps')
+          }
+     }
+     if(!is.null(n.sequences)){
+          if(is.null(current.sequence)){
+               stop('please choose current.sequence')
+          }
+     }
 
 
      theta=array(NA,c(n.chains,n.pars,n.subj,meltin*length(temperatures) + burnin + n.samples*length(temperatures)))
@@ -124,6 +142,13 @@ powder = function(data,model,num.temps=NULL,alpha=.3,high.temps.first=FALSE,n.se
      for(i in 1:n.chains){
           phi[i,,1] = model$phi.init()
      }
+
+     opt = list(num.temps=num.temps,alpha=alpha,high.temps.first=high.temps.first,
+                n.sequences=n.sequences,current.sequence=current.sequence,
+                n.samples=n.samples,n.chains=n.chains,burnin=burnin,meltin=meltin,
+                de_params=de_params,n.subj=n.subj,n.pars=n.pars,n.hpars=n.hpars,
+                sample.posterior=sample.posterior,return.samples=return.samples,
+                temperatures=temperatures)
 
      log.like.list = list()
      idx = 2
