@@ -78,7 +78,7 @@ stepping_stone_stable = function(prob_list,t){
      return(ss)
 }
 
-#' Marginal likelihood estimates based on samples from power posterior
+#' Estimates marginal likelihood from power posterior samples
 #'
 #' \code{marginal_likelihood} Estimates marginal likelihood using output from \code{powder}
 #'
