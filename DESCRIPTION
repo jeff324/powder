@@ -1,7 +1,7 @@
 Package: powder
 Type: Package
 Title: Power posterior sampling via differential evolution
-Version: 0.1.0
+Version: 0.0.9000
 Author: Jeffrey Annis
 Maintainer: Jeffrey Annis <jannis@mail.usf.edu>
 Description: Samples from power posteriors via differential evolution. The samples
