@@ -2,7 +2,7 @@
 % Please edit documentation in R/estimators.R
 \name{marginal_likelihood}
 \alias{marginal_likelihood}
-\title{Marginal likelihood estimates based on samples from power posterior}
+\title{Estimates marginal likelihood from power posterior samples}
 \usage{
 marginal_likelihood(pow.out)
 }
