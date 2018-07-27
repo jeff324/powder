@@ -19,12 +19,18 @@ The underlying code that does DE-MCMC was initially developed by Scott Brown (Ne
 devtools::install_github('jeff324/powder',build_vignettes = TRUE)
 ```
 
-## Vignette
+## Vignettes
 
 View the tutorial on thermodynamic integration and steppingstone sampling.
 
 ```{r,eval=FALSE}
 vignette("powder-lba")
+```
+
+The examples from the paper are also included as well as the paper itself (in revision).
+```{r,eval=FALSE}
+vignette("powder-paper-examples")
+vignette("powder-paper")
 ```
 
 ## Obtaining the power posteriors and estimating the marginal likelihood

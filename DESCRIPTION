@@ -18,5 +18,6 @@ Imports:
 RoxygenNote: 6.0.1
 Suggests: knitr,
     rmarkdown,
-    testthat
-VignetteBuilder: knitr
+    testthat,
+    R.rsp
+VignetteBuilder: knitr, R.rsp

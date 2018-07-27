@@ -20,13 +20,20 @@ Installing powder
 devtools::install_github('jeff324/powder',build_vignettes = TRUE)
 ```
 
-Vignette
---------
+Vignettes
+---------
 
 View the tutorial on thermodynamic integration and steppingstone sampling.
 
 ``` r
 vignette("powder-lba")
+```
+
+The examples from the paper are also included as well as the paper itself (in revision).
+
+``` r
+vignette("powder-paper-examples")
+vignette("powder-paper")
 ```
 
 Obtaining the power posteriors and estimating the marginal likelihood

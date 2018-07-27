@@ -1,0 +1,102 @@
+---
+title: "Examples from the tutorial paper"
+author: "Jeffrey Annis"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Examples from the tutorial paper}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+This vignette describes the examples in the paper "Thermodynamic integration and Steppingstone sampling methods for computing Bayes factors: A tutorial" by Annis, Evans, Miller, and Palmeri (submitted). The paper comes bundled with the `powder` package. To view it:
+```{r,eval=FALSE}
+vignette("powder-paper",package = 'powder')
+```
+In the paper, we used two different simulated datasets, each with 10 simulated subjects in two conditions with 300 trials per condition. The "null" dataset contained no differences in parameters over conditions. The "drift" dataset contained changes in drift rates across conditions. In addition to the two simulated datasets we also used an empirical dataset from Rae et al. (2014).
+
+We fit 4 different models to each dataset. We used two models that are commonly of theoretical interest: one that contained different drift rates for each condition, and one that contained different thresholds for each condition. In addition, we included a simple variant – a model with no parameters varying over condition – and a complex variant – with drift rate, threshold, and non-decision time all varying over condition – in order to see how different levels of dimensionality would affect the estimates. 
+
+To load the "null" dataset run the following. If you want to run the drift dataset, set `dataset = 'drift'`. For the Rae et al. dataset, set set `dataset = 'rae'`. 
+```{r}
+library(powder)
+
+dataset = 'null'
+
+if(dataset=='null'){
+     data('null')
+     dat = null
+}
+if(dataset=='drift'){
+     data('drift')
+     dat = drift
+}
+if(dataset=='rae'){
+     data('rae')
+     dat = rae
+}
+```
+Next the models are defined. To define the simple LBA model in the paper do the following:
+```{r}
+simple.model = LBA$new()
+```
+Next, define the priors in the paper. Note that LBA priors are all truncated normals with mean `mu`, standard deviation `sigma`, lower bound `0`, and upper bound `Inf`.
+```{r}
+
+simple.model$prior$A$mu = c(mu=1,sigma=1) 
+simple.model$prior$A$sigma = c(mu=1,sigma=1)
+
+#note that b is the relative threshold (denoted as k in the paper)
+simple.model$prior$b$mu = c(mu=.4,sigma=.4) 
+simple.model$prior$b$sigma = c(mu=.4,sigma=.4)
+
+simple.model$prior$t0$mu = c(mu=.3,sigma=.3)
+simple.model$prior$t0$sigma = c(mu=.3,sigma=.3)
+
+simple.model$prior$vc$mu = c(mu=3,sigma=3)
+simple.model$prior$vc$sigma = c(mu=3,sigma=3)
+
+simple.model$prior$ve$mu = c(mu=1,sigma=1)
+simple.model$prior$ve$sigma = c(mu=1,sigma=1)
+
+simple.model$prior$sve$mu = c(mu=1,sigma=1)
+simple.model$prior$sve$sigma = c(mu=1,sigma=1)
+```
+We can create the other models quite easily because they share the same priors. Note the priors are the same across conditions. To create the complex model:
+```{r}
+complex.model = LBA$new(vc = TRUE, b = TRUE, t0 = TRUE, prior = simple.model$prior)
+```
+Drift model
+```{r} 
+drift.model = LBA$new(vc = TRUE, prior = simple.model$prior)
+```
+Threshold model
+```{r}
+threshold.model = LBA$new(b = TRUE, prior = simple.model$prior)
+```
+We can then run each model on the chosen data and compute marginal likelihood. This will take a while at these settings.
+```{r,eval=FALSE}
+simple.out = powder(data=dat, model=simple.model, num.temps = 35, high.temps.first = TRUE,
+                    n.samples = 300, burnin = 1000, meltin = 200)
+simple.ml = marginal_likelihood(simple.out)
+
+complex.out = powder(data=dat, model=complex.model, num.temps = 35, high.temps.first = TRUE,
+                    n.samples = 300, burnin = 1000, meltin = 200)
+complex.ml = marginal_likelihood(complex.out)
+
+drift.out = powder(data=dat, model=drift.model, num.temps = 35, high.temps.first = TRUE,
+                    n.samples = 300, burnin = 1000, meltin = 200)
+drift.ml = marginal_likelihood(drift.out)
+
+threshold.out = powder(data=dat, model=threshold.model, num.temps = 35, high.temps.first = TRUE,
+                    n.samples = 300, burnin = 1000, meltin = 200)
+threshold.ml = marginal_likelihood(threshold.out)
+
+```
