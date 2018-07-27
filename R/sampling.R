@@ -51,7 +51,13 @@
 #' print(est)
 #' }
 #' @export
-powder = function(data,model,num.temps=NULL,alpha=.3,high.temps.first=FALSE,n.sequences=NULL,current.sequence=NULL,
+powder <- function(model,data,num.temps=NULL,alpha=.3,high.temps.first=FALSE,n.sequences=NULL,current.sequence=NULL,
+                   n.samples=1000,n.chains=NULL,burnin=500,meltin=250,
+                   de_params=list(b=.001, migration=FALSE,migration.freq=NULL,migration.start=NULL,migration.end=NULL),
+                   n.subj=NULL,n.pars=NULL,n.hpars=NULL,sample.posterior=FALSE,return.samples=TRUE) UseMethod("powder")
+
+#' @export
+powder.Hierarchical.Model = function(model,data,num.temps=NULL,alpha=.3,high.temps.first=FALSE,n.sequences=NULL,current.sequence=NULL,
                   n.samples=1000,n.chains=NULL,burnin=500,meltin=250,
                   de_params=list(b=.001, migration=FALSE,migration.freq=NULL,migration.start=NULL,migration.end=NULL),
                   n.subj=NULL,n.pars=NULL,n.hpars=NULL,sample.posterior=FALSE,return.samples=TRUE){
@@ -246,6 +252,8 @@ powder = function(data,model,num.temps=NULL,alpha=.3,high.temps.first=FALSE,n.se
           return(log.like.list,options=opt)
      }
 }
+
+
 
 
 get_temperatures = function(num.temps,alpha=.3,high.temps.first,n.sequences=NULL,current.sequence=NULL){
