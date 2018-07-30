@@ -4,18 +4,15 @@
 \alias{powder}
 \title{Power posterior sampling using differential evolution}
 \usage{
-powder(data, model, num.temps = NULL, alpha = 0.3,
-  high.temps.first = FALSE, n.sequences = NULL, current.sequence = NULL,
-  n.samples = 1000, n.chains = NULL, burnin = 500, meltin = 250,
-  de_params = list(b = 0.001, migration = FALSE, migration.freq = NULL,
-  migration.start = NULL, migration.end = NULL), n.subj = NULL,
-  n.pars = NULL, n.hpars = NULL, sample.posterior = FALSE,
-  return.samples = TRUE)
+powder(model, data, num.temps, alpha, high.temps.first, n.sequences,
+  current.sequence, n.samples, n.chains, burnin, meltin, de_params = list(b =
+  0.001, migration = FALSE, migration.freq = NULL, migration.start = NULL,
+  migration.end = NULL), sample.posterior, return.samples, verbose, update)
 }
 \arguments{
-\item{data}{A list of data where each element is the data for a specific subject}
-
 \item{model}{See \code{\link{LBA}} for more information and an example.}
+
+\item{data}{A list of data where each element is the data for a specific subject}
 
 \item{num.temps}{Number of temperatures (i.e. number of power posteriors to sample from)}
 
@@ -54,16 +51,14 @@ other power posteriors.}
 \item \code{migration.end} When to stop migrating. Migration should stop well before sampling is finished.
 }}
 
-\item{n.subj}{The number of elements in \code{data}. Defaults to \code{length(data)}.}
-
-\item{n.pars}{The number of subject-level parameters}
-
-\item{n.hpars}{The number of group-level parameters}
-
 \item{sample.posterior}{If true, only the posterior will be sampled. This causes other arguments, like num.temps to be ignored.}
 
 \item{return.samples}{If true, return subject and group-level samples.
 Otherwise, return only the log likelihoods from each power posterior.}
+
+\item{verbose}{Display progress}
+
+\item{update}{Number of iterations between progress display updates}
 }
 \value{
 A list with the following elements.

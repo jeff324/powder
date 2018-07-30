@@ -1,5 +1,5 @@
 ---
-title: "Examples from the tutorial paper"
+title: "Hierarchical examples from the tutorial paper"
 author: "Jeffrey Annis"
 date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
@@ -16,7 +16,7 @@ knitr::opts_chunk$set(
 )
 ```
 
-This vignette describes the examples in the paper "Thermodynamic integration and Steppingstone sampling methods for computing Bayes factors: A tutorial" by Annis, Evans, Miller, and Palmeri (submitted). The paper comes bundled with the `powder` package. To view it:
+This vignette describes the hierarchical examples in the paper "Thermodynamic integration and Steppingstone sampling methods for computing Bayes factors: A tutorial" by Annis, Evans, Miller, and Palmeri (submitted). The paper comes bundled with the `powder` package. To view it:
 ```{r,eval=FALSE}
 vignette("powder-paper",package = 'powder')
 ```
@@ -24,7 +24,7 @@ In the paper, we used two different simulated datasets, each with 10 simulated s
 
 We fit 4 different models to each dataset. We used two models that are commonly of theoretical interest: one that contained different drift rates for each condition, and one that contained different thresholds for each condition. In addition, we included a simple variant – a model with no parameters varying over condition – and a complex variant – with drift rate, threshold, and non-decision time all varying over condition – in order to see how different levels of dimensionality would affect the estimates. 
 
-To load the "null" dataset run the following. If you want to run the drift dataset, set `dataset = 'drift'`. For the Rae et al. dataset, set set `dataset = 'rae'`. 
+To load the "null" dataset run the following. If you want to run the drift dataset, set `dataset = 'drift'`. For the Rae et al. dataset, set `dataset = 'rae'`. For the individual (single-subject) dataset, set `dataset = 'individual.`
 ```{r}
 library(powder)
 
@@ -42,8 +42,9 @@ if(dataset=='rae'){
      data('rae')
      dat = rae
 }
+
 ```
-Next the models are defined. To define the simple LBA model in the paper do the following:
+To define the simple hierarchical LBA model in the paper do the following:
 ```{r}
 simple.model = LBA$new()
 ```
@@ -83,20 +84,25 @@ threshold.model = LBA$new(b = TRUE, prior = simple.model$prior)
 ```
 We can then run each model on the chosen data and compute marginal likelihood. This will take a while at these settings.
 ```{r,eval=FALSE}
-simple.out = powder(data=dat, model=simple.model, num.temps = 35, high.temps.first = TRUE,
-                    n.samples = 300, burnin = 1000, meltin = 200)
-simple.ml = marginal_likelihood(simple.out)
+n.samples = 300
+burnin = 1000
+meltin = 200
+num.temps = 35
 
-complex.out = powder(data=dat, model=complex.model, num.temps = 35, high.temps.first = TRUE,
-                    n.samples = 300, burnin = 1000, meltin = 200)
-complex.ml = marginal_likelihood(complex.out)
+simple.out = powder(data=dat, model=simple.model, num.temps = num.temps, 
+                    n.samples = n.samples, burnin = burnin, meltin = meltin)
+simple.ml = marginal.likelihood(simple.out)
 
-drift.out = powder(data=dat, model=drift.model, num.temps = 35, high.temps.first = TRUE,
-                    n.samples = 300, burnin = 1000, meltin = 200)
-drift.ml = marginal_likelihood(drift.out)
+complex.out = powder(data=dat, model=complex.model, num.temps = num.temps, 
+                    n.samples = n.samples, burnin = burnin, meltin = meltin)
+complex.ml = marginal.likelihood(complex.out)
 
-threshold.out = powder(data=dat, model=threshold.model, num.temps = 35, high.temps.first = TRUE,
-                    n.samples = 300, burnin = 1000, meltin = 200)
-threshold.ml = marginal_likelihood(threshold.out)
+drift.out = powder(data=dat, model=drift.model, num.temps = num.temps, 
+                    n.samples = n.samples, burnin = burnin, meltin = meltin)
+drift.ml = marginal.likelihood(drift.out)
+
+threshold.out = powder(data=dat, model=threshold.model, num.temps = num.temps, 
+                    n.samples = n.samples, burnin = burnin, meltin = meltin)
+threshold.ml = marginal.likelihood(threshold.out)
 
 ```

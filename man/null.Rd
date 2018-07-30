@@ -3,7 +3,7 @@
 \docType{data}
 \name{null}
 \alias{null}
-\title{The "null" simulated dataset}
+\title{Simulated example dataset from the LBA (no parameter varied across conditions)}
 \format{A list with 10 elements, each representing a simulated subject. Each element contains the following:
 \describe{
 \item{Cond}{condition number}
