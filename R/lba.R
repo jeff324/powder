@@ -1,9 +1,7 @@
-#' The Linear Ballistic Accumulator model (Brown & Heathcote, 2008)
+#' Hierarchical Linear Ballistic Accumulator model (Brown & Heathcote, 2008)
 #'
 #' @docType class
 #' @importFrom R6 R6Class
-#' @importFrom stats pnorm
-#' @importFrom stats dnorm
 #' @return Object of \code{\link{R6Class}} with methods for doing sampling with \code{\link{powder}}
 #' @format \code{\link{R6Class}} object.
 #' @examples
@@ -28,7 +26,7 @@
 #' \item{\code{log.dens.hyper(theta,phi,prior)}}{summed log-likelihood for subject given group-level parameters and group given priors}
 #' \item{\code{log.dens.like(x,data,par.names)}}{LBA likelihood function}}
 #' @export
-LBA = R6::R6Class('Hierarchical.Model',
+LBA = R6::R6Class('Model.Hierarchical',
     inherit = LBA.Individual,
     public = list(
 

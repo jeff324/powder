@@ -3,7 +3,7 @@
 \docType{data}
 \name{drift}
 \alias{drift}
-\title{The "drift" simulated dataset}
+\title{Simulated example dataset from the LBA (varies drift rate across conditions)}
 \format{A list with 10 elements, each representing a simulated subject. Each element contains the following:
 \describe{
 \item{Cond}{condition number}

@@ -10,8 +10,26 @@ crossover=function(i,n.chains,b,pars,use.theta,use.like,data,hyper,par.names,tem
      theta=use.theta[i,]
      theta[pars]=use.theta[i,pars] + gamma*(use.theta[index[1],pars]-use.theta[index[2],pars]) + runif(1,-b,b)
      #  theta=matrix(theta,1,length(theta))
-     like=model$log.dens.like(theta,data,par.names=par.names)*temperature
-     weight=like + model$log.dens.prior(theta,hyper[i,])
+     like=model$log.dens.like(theta,data,par.names=par.names)
+     weight=like*temperature + model$log.dens.prior(theta,hyper[i,])
+     if(is.na(weight))weight=-Inf
+     if(runif(1) < exp(weight-use.weight)) {
+          use.theta[i,]=theta
+          use.like[i]=like
+     }
+     c(use.like[i],use.theta[i,])
+}
+
+crossover_ind=function(i,n.chains,b,pars,use.theta,use.like,data,hyper,par.names,temperature,model){
+     #require(msm)
+     use.weight=use.like[i]*temperature + model$log.dens.prior(use.theta[i,],hyper)
+     gamma = 2.38/sqrt(2*length(pars))
+     index=sample(c(1:n.chains)[-i],2,replace=F)
+     theta=use.theta[i,]
+     theta[pars]=use.theta[i,pars] + gamma*(use.theta[index[1],pars]-use.theta[index[2],pars]) + runif(1,-b,b)
+     #  theta=matrix(theta,1,length(theta))
+     like=model$log.dens.like(theta,data,par.names=par.names)
+     weight=like*temperature + model$log.dens.prior(theta,hyper)
      if(is.na(weight))weight=-Inf
      if(runif(1) < exp(weight-use.weight)) {
           use.theta[i,]=theta

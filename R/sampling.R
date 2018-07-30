@@ -30,12 +30,11 @@
 #' * \code{migration.start} When to start migrating. This should be after chains are burned in.
 #' * \code{migration.end} When to stop migrating. Migration should stop well before sampling is finished.
 #' @md
-#' @param n.subj The number of elements in \code{data}. Defaults to \code{length(data)}.
-#' @param n.pars The number of subject-level parameters
-#' @param n.hpars The number of group-level parameters
 #' @param sample.posterior If true, only the posterior will be sampled. This causes other arguments, like num.temps to be ignored.
 #' @param return.samples If true, return subject and group-level samples.
 #' Otherwise, return only the log likelihoods from each power posterior.
+#' @param verbose Display progress
+#' @param update Number of iterations between progress display updates
 #' @return A list with the following elements.
 #' @return \code{log.like.list} A list containing the log likelihoods for each temperature
 #' @return \code{theta} An array containing the subject-level samples
@@ -51,16 +50,21 @@
 #' print(est)
 #' }
 #' @export
-powder <- function(model,data,num.temps=NULL,alpha=.3,high.temps.first=FALSE,n.sequences=NULL,current.sequence=NULL,
-                   n.samples=1000,n.chains=NULL,burnin=500,meltin=250,
+powder <- function(model,data,num.temps,alpha,high.temps.first,n.sequences,current.sequence,
+                   n.samples,n.chains,burnin,meltin,
                    de_params=list(b=.001, migration=FALSE,migration.freq=NULL,migration.start=NULL,migration.end=NULL),
-                   n.subj=NULL,n.pars=NULL,n.hpars=NULL,sample.posterior=FALSE,return.samples=TRUE) UseMethod("powder")
+                   sample.posterior,return.samples,verbose,update) UseMethod("powder")
 
 #' @export
-powder.Hierarchical.Model = function(model,data,num.temps=NULL,alpha=.3,high.temps.first=FALSE,n.sequences=NULL,current.sequence=NULL,
-                  n.samples=1000,n.chains=NULL,burnin=500,meltin=250,
-                  de_params=list(b=.001, migration=FALSE,migration.freq=NULL,migration.start=NULL,migration.end=NULL),
-                  n.subj=NULL,n.pars=NULL,n.hpars=NULL,sample.posterior=FALSE,return.samples=TRUE){
+powder.Model.Individual = function(model,data,num.temps=NULL,alpha=.3,high.temps.first=FALSE,n.sequences=1,current.sequence=1,
+                                     n.samples=1000,n.chains=NULL,burnin=500,meltin=250,
+                                     de_params=list(b=.001, migration=FALSE,migration.freq=NULL,migration.start=NULL,migration.end=NULL),
+                                     sample.posterior=FALSE,return.samples=TRUE,verbose=TRUE,update=100){
+
+
+     theta.names = model$theta.names
+     prior = model$prior
+     b = de_params$b
 
      if(is.null(num.temps)){
           num.temps = 30
@@ -74,11 +78,6 @@ powder.Hierarchical.Model = function(model,data,num.temps=NULL,alpha=.3,high.tem
      if(num.temps == 1){
           temperatures = 1 #default to posterior sampling
      }
-
-     theta.names = model$theta.names
-     phi.names = model$phi.names
-     prior = model$prior
-
 
      if(!de_params$migration){
           migration.freq=0
@@ -100,17 +99,12 @@ powder.Hierarchical.Model = function(model,data,num.temps=NULL,alpha=.3,high.tem
 
      }
 
-     b = de_params$b
+     if(is.list(data[[1]])){
+          stop('Expected data[[1]] to be a vector not a list')
+     }
 
-     if(is.null(n.subj)){
-          n.subj = length(data)
-     }
-     if(is.null(n.pars)){
-          n.pars = length(theta.names)
-     }
-     if(is.null(n.hpars)){
-          n.hpars = 2*n.pars
-     }
+     n.pars = length(theta.names)
+
      if(is.null(n.chains)){
           n.chains = 3*n.pars
      }
@@ -126,146 +120,263 @@ powder.Hierarchical.Model = function(model,data,num.temps=NULL,alpha=.3,high.tem
      if(meltin <= 0){
           stop('meltin must be > 0')
      }
-     if(!is.null(n.sequences)){
-          if(n.sequences > num.temps){
+     if(n.sequences > num.temps){
+               stop('n.sequences must be <= num.temps')
+          }
+     if(is.null(current.sequence)){
+          stop('please choose current.sequence')
+     }
+
+
+     theta = array(NA,c(n.chains, n.pars, meltin*length(temperatures) + burnin + n.samples*length(temperatures)))
+     weight = array(-Inf,c(meltin*length(temperatures) + burnin + n.samples*length(temperatures),n.chains))
+
+     log.like.list = list()
+
+     colnames(theta) = theta.names
+
+     opt = list(num.temps=num.temps,alpha=alpha,high.temps.first=high.temps.first,
+                n.sequences=n.sequences,current.sequence=current.sequence,n.pars=n.pars,
+                n.samples=n.samples,n.chains=n.chains,burnin=burnin,meltin=meltin,
+                de_params=de_params,sample.posterior=sample.posterior,return.samples=return.samples,
+                temperatures=temperatures)
+
+     idx = 2
+     for (t in 1:length(temperatures)) {
+          if(verbose){
+               cat('\n')
+               cat(paste('Sampling power posterior @ temperature', temperatures[t],':',t,'/', length(temperatures)))
+          }
+          if (t==1) {
+               n.iter = burnin + n.samples
+               for (i in 1:n.chains) {
+                    while (weight[1, i]==-Inf) {
+                         theta[i, ,1] = model$theta.init()
+                         weight[1, i] = model$log.dens.like(theta[i, ,1],data=data,par.names=theta.names)
+                    }
+               }
+          }else{
+               n.iter = meltin + n.samples
+               log.like[1, ] = sapply(1:n.chains, function(x) model$log.dens.like(theta[x, ,idx-1], data=data, par.names=theta.names))
+               weight[idx-1, ] = log.like[1, ]
+          }
+
+          log.like = array(NA,c(n.iter, n.chains))
+          for (i in 2:n.iter) {
+               if(verbose){
+                    if (i%%update==0)cat("\n ",i,'/',n.iter)
+               }
+               temp = t(sapply(1:n.chains, crossover_ind, n.chains=n.chains, b=b, pars=1:n.pars, use.theta=theta[ , ,idx-1], use.like=weight[idx-1, ],
+                             data=data, hyper=prior, par.names=theta.names, temperature=temperatures[t], model=model))
+               weight[idx, ] = temp[ ,1]
+               theta[ , ,idx] = temp[ ,2:(n.pars+1)]
+               log.like[i, ] = temp[ ,1]
+               idx = idx + 1
+          }
+          log.like.list[[t]] = log.like
+     }
+     if(verbose){
+          cat('\n')
+          cat('Sampling Completed')
+          cat('\n')
+     }
+     if (return.samples) {
+          out = list(log.like.list=log.like.list, theta=theta, options=opt)
+          class(out) = 'Powder.Individual'
+          return(out)
+     } else {
+          out = list(log.like.list=log.like.list, options=opt)
+          class(out) = 'Powder.Individual'
+          return()
+     }
+}
+
+#' @export
+powder.Model.Hierarchical = function(model,data,num.temps=NULL,alpha=.3,high.temps.first=FALSE,n.sequences=1,current.sequence=1,
+                  n.samples=1000,n.chains=NULL,burnin=500,meltin=250,
+                  de_params=list(b=.001, migration=FALSE,migration.freq=NULL,migration.start=NULL,migration.end=NULL),
+                  sample.posterior=FALSE,return.samples=TRUE,verbose=TRUE,update=10){
+
+
+     theta.names = model$theta.names
+     phi.names = model$phi.names
+     prior = model$prior
+
+     n.subj = length(data)
+     n.pars = length(theta.names)
+     n.hpars = length(phi.names)
+
+     b = de_params$b
+
+     if (is.null(num.temps)) {
+          num.temps = 30
+     }
+
+     if (!sample.posterior) {
+          temperatures = get_temperatures(num.temps, alpha,high.temps.first, n.sequences, current.sequence)
+     } else {
+          temperatures = 1
+     }
+     if (num.temps == 1) {
+          temperatures = 1 #default to posterior sampling
+     }
+
+     if (!de_params$migration) {
+          migration.freq = 0
+          migration.start = -1
+          migration.end = -1
+     } else if (de_params$migration) {
+          if (is.null(migration.freq)) {
+               warning('migration.freq not set. Setting migration.frequency = 20')
+               migration.freq = 20
+          }
+          if (is.null(migration.start)) {
+               warning('migration.start not set. Setting migration.start = burnin')
+               migration.start = burnin
+          }
+          if (is.null(migration.end)) {
+               warning('migration.end not set. Setting migration.end = (n.samples / 2) + burnin')
+               migration.end = (n.samples / 2) + burnin
+          }
+
+     }
+
+     if (is.null(n.chains)) {
+          n.chains = 3 * n.pars
+     }
+     if (n.samples <= 0) {
+          stop('n.samples must be > 0')
+     }
+     if (num.temps <= 0) {
+          stop('num.temps must be > 0')
+     }
+     if (burnin <= 0) {
+          stop('burnin must be > 0')
+     }
+     if (meltin <= 0) {
+          stop('meltin must be > 0')
+     }
+     if (!is.null(n.sequences)) {
+          if (n.sequences > num.temps) {
                stop('n.sequences must be <= num.temps')
           }
      }
-     if(!is.null(n.sequences)){
-          if(is.null(current.sequence)){
+     if (!is.null(n.sequences)) {
+          if (is.null(current.sequence)) {
                stop('please choose current.sequence')
           }
      }
 
-
-     theta=array(NA,c(n.chains,n.pars,n.subj,meltin*length(temperatures) + burnin + n.samples*length(temperatures)))
-     phi=array(NA,c(n.chains,n.hpars,meltin*length(temperatures) + burnin + n.samples*length(temperatures)))
-     weight=array(-Inf,c(meltin*length(temperatures) + burnin + n.samples*length(temperatures),n.chains,n.subj))
+     theta=array(NA, c(n.chains, n.pars, n.subj, meltin*length(temperatures) + burnin + n.samples*length(temperatures)))
+     phi=array(NA, c(n.chains, n.hpars, meltin*length(temperatures) + burnin + n.samples*length(temperatures)))
+     weight=array(-Inf, c(meltin*length(temperatures) + burnin + n.samples*length(temperatures),n.chains,n.subj))
+     log.like.list = list()
 
      colnames(theta) = theta.names
      colnames(phi) = phi.names
 
-     for(i in 1:n.chains){
-          phi[i,,1] = model$phi.init()
+     for (i in 1:n.chains) {
+          phi[i, ,1] = model$phi.init()
      }
 
-     opt = list(num.temps=num.temps,alpha=alpha,high.temps.first=high.temps.first,
-                n.sequences=n.sequences,current.sequence=current.sequence,
-                n.samples=n.samples,n.chains=n.chains,burnin=burnin,meltin=meltin,
-                de_params=de_params,n.subj=n.subj,n.pars=n.pars,n.hpars=n.hpars,
-                sample.posterior=sample.posterior,return.samples=return.samples,
+     opt = list(num.temps=num.temps, alpha=alpha, high.temps.first=high.temps.first,
+                n.sequences=n.sequences, current.sequence=current.sequence,
+                n.subj=n.subj,n.pars=n.pars,n.hpars=n.hpars,
+                n.samples=n.samples, n.chains=n.chains,burnin=burnin, meltin=meltin,
+                de_params=de_params, sample.posterior=sample.posterior, return.samples=return.samples,
                 temperatures=temperatures)
 
-     log.like.list = list()
      idx = 2
-     for(t in 1:length(temperatures)){
-          cat('\n')
-          print(paste('Running temperature',temperatures[t],':',t,'/',length(temperatures)))
-          if(t==1){
+     for (t in 1:length(temperatures)) {
+          if(verbose){
+               cat('\n')
+               cat(paste('Sampling power posterior @ temperature', temperatures[t],':',t,'/', length(temperatures)))
+          }
+          if (t==1) {
                n.iter = burnin + n.samples
 
-          }else{
+          } else {
                n.iter = meltin + n.samples
           }
-          log_like = array(NA,dim=c(n.iter,n.chains,n.subj))
-          if(t==1){
-               for(i in 1:n.chains){
-                    for(j in 1:n.subj){
+          log_like = array(NA,dim=c(n.iter, n.chains, n.subj))
+          if (t==1) {
+               for (i in 1:n.chains) {
+                    for (j in 1:n.subj) {
                          while (weight[1,i,j]==-Inf) {
-                              theta[i,,j,1]=model$theta.init()
-                              weight[1,i,j]=model$log.dens.like(theta[i,,j,1],data=data[[j]],par.names=theta.names)
+                              theta[i, ,j,1] = model$theta.init()
+                              weight[1,i,j] = model$log.dens.like(theta[i, ,j,1],data=data[[j]],par.names=theta.names)
                          }
                     }
                }
-          }else{
-               for(j in 1:n.subj){
-                    weight[idx-1,,j]=sapply(1:n.chains,function(x)model$log.dens.like(theta[x,,j,idx-1],data=data[[j]],par.names=theta.names))
-                    log_like[1,,j]=sapply(1:n.chains,function(x)model$log.dens.like(theta[x,,j,idx-1],data=data[[j]],par.names=theta.names))
+          } else {
+               for (j in 1:n.subj) {
+                    log_like[1, ,j] = sapply(1:n.chains,function(x)model$log.dens.like(theta[x, ,j,idx-1],data=data[[j]],par.names=theta.names))
+                    weight[idx-1, ,j] = log_like[1, ,j]
                }
           }
 
-          for(i in 2:n.iter){
-               if(i%%10==0)cat("\n ",i,'/',n.iter,' ')
-               phi[,,idx]=phi[,,idx-1]
-               rand.samp=sample(1:n.chains,n.chains)
+          for (i in 2:n.iter) {
+               if(verbose){
+                    if (i%%update == 0)cat("\n ", i, '/', n.iter, ' ')
+               }
+               phi[,,idx] = phi[,,idx-1]
+               rand.samp = sample(1:n.chains,n.chains)
                for (p in theta.names) {
-                    which.theta=match(x=p,table=theta.names)
-                    which.phi=grep(paste0('^',p),phi.names)
+                    which.theta = match(x=p, table=theta.names)
+                    which.phi = grep(paste0('^',p),phi.names)
                     if (idx %% migration.freq == 0 & idx > migration.start & idx < migration.end) {
-                         phi[,,idx]=migration.crossover_hyper(pars=which.phi,
-                                                              n.chains=n.chains,
-                                                              use.theta=theta[rand.samp,which.theta,,idx-1],
-                                                              use.phi=phi[,,idx],
-                                                              prior=prior[[p]],
-                                                              model)
+                         phi[ , ,idx] = migration.crossover_hyper(pars=which.phi, n.chains=n.chains, use.theta=theta[rand.samp,which.theta,,idx-1],
+                                                              use.phi=phi[ , ,idx], prior=prior[[p]], model)
                     } else {
-                         phi[,,idx]=t(sapply(1:n.chains,
-                                             crossover_hyper,
-                                             pars=which.phi,
-                                             n.chains=n.chains,
-                                             b=b,
-                                             use.theta=theta[rand.samp,which.theta,,idx-1],
-                                             use.phi=phi[,,idx],
-                                             prior=prior[[p]],
-                                             model))
+                         phi[ , ,idx] = t(sapply(1:n.chains, crossover_hyper, pars=which.phi, n.chains=n.chains, b=b,
+                                             use.theta=theta[rand.samp, which.theta, ,idx-1], use.phi=phi[ , ,idx], prior=prior[[p]], model))
                     }
                }
-               rand.samp=sample(1:n.chains,n.chains)
-               hyper=phi[rand.samp,,idx]
+               rand.samp = sample(1:n.chains, n.chains)
+               hyper = phi[rand.samp, , idx]
 
-               for(j in 1:n.subj){
+               for (j in 1:n.subj) {
                     #cat(j)
                     if (idx %% migration.freq == 0 & idx > migration.start & idx < migration.end) {
-                         temp=migration.crossover(pars=1:n.pars,
-                                                  n.chains=n.chains,
-                                                  use.theta=theta[,,j,idx-1],
-                                                  use.like=weight[idx-1,,j],
-                                                  data=data[[j]],hyper=hyper,
-                                                  par.names=theta.names,
-                                                  model)
+                         temp = migration.crossover(pars=1:n.pars, n.chains=n.chains, use.theta=theta[,,j,idx-1], use.like=weight[idx-1,,j],
+                                                  data=data[[j]],hyper=hyper, par.names=theta.names, model)
                     } else {
-                         temp=t(sapply(1:n.chains,
-                                       crossover,
-                                       pars=1:n.pars,
-                                       n.chains=n.chains,
-                                       b=b,
-                                       use.theta=theta[,,j,idx-1],
-                                       use.like=weight[idx-1,,j],
-                                       data=data[[j]],
-                                       hyper=hyper,
-                                       par.names=theta.names,
-                                       temperatures[t],
-                                       model))
+                         temp = t(sapply(1:n.chains, crossover, pars=1:n.pars, n.chains=n.chains, b=b, use.theta=theta[ , ,j,idx-1],
+                                       use.like=weight[idx-1, ,j], data=data[[j]], hyper=hyper,par.names=theta.names,temperatures[t],model))
                     }
-                    weight[idx,,j]=temp[,1]
-                    theta[,,j,idx]=temp[,2:(n.pars+1)]
-                    log_like[i,,j]=temp[,1]
+                    weight[idx, ,j] = temp[ ,1]
+                    theta[ , ,j,idx] = temp[ ,2:(n.pars+1)]
+                    log_like[i, ,j] = temp[ ,1]
                }
                idx = idx + 1
           }
           log.like.list[[t]] = log_like
 
      }
-     if(return.samples){
-          return(list(log.like.list=log.like.list,theta=theta,phi=phi,options=opt))
-     }else{
-          return(log.like.list,options=opt)
+     if(verbose){
+         cat('\n')
+          cat('Sampling Completed')
+          cat('\n')
+     }
+     if (return.samples) {
+          out = list(log.like.list=log.like.list, theta=theta, phi=phi, options=opt)
+          class(out) = 'Powder.Hierarchical'
+          return(out)
+     } else {
+          out = list(log.like.list=log.like.list, options=opt)
+          class(out) = 'Powder.Hierarchical'
+          return(out)
      }
 }
 
 
-
-
-get_temperatures = function(num.temps,alpha=.3,high.temps.first,n.sequences=NULL,current.sequence=NULL){
+get_temperatures = function(num.temps,alpha,high.temps.first,n.sequences,current.sequence){
 
      temperatures = (0:(num.temps-1)/(num.temps-1))^(1/alpha)
+     temperatures = split(temperatures, ceiling(seq_along(temperatures)/(num.temps/n.sequences)))[[current.sequence]]
 
      if(high.temps.first){
           temperatures = rev(temperatures)
-     }
-
-     if(!is.null(n.sequences) & !is.null(current.sequence)){
-          temperatures = split(temperatures, ceiling(seq_along(temperatures)/(num.temps/n.sequences)))[[current.sequence]]
      }
 
      return(temperatures)

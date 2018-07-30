@@ -1,4 +1,31 @@
-LBA.Individual = R6::R6Class('Individual.Model',
+#' Individual subject Linear Ballistic Accumulator model (Brown & Heathcote, 2008)
+#'
+#' @docType class
+#' @importFrom R6 R6Class
+#' @importFrom stats pnorm
+#' @importFrom stats dnorm
+#' @return Object of \code{\link{R6Class}} with methods for doing sampling with \code{\link{powder}}
+#' @format \code{\link{R6Class}} object.
+#' @examples
+#' \dontrun{
+#' #LBA model that varies threshold across 3 conditions
+#' model_threshold = LBA$new(b=T,conds=1:3)
+#' #LBA model that varies correct drift rate over 2 conditions
+#' model_drift = LBA$new(vc=T,conds=1:2)
+#' #LBA model that varies start point variability and non-decision over 2 conditions
+#' model_sp_t0 = LBA$new(t0=T,A=T,conds=1:2)
+#' }
+#' @field theta.names a character vector containing the names of the subject-level parameters
+#' @field theta.init a function that provides a random initial value for each subject-level parameter
+#' @field theta.start.point a numeric vector containing means of start points used to initialize in theta.init
+#' @field vary.parameter a logical vector containing parameters to vary
+#' @field prior a list containing priors on all parameters
+#' @section Methods:
+#' \describe{
+#' \item{\code{log.dens.prior(x,hyper)}}{likelihood of subject-level parameters given group-level parameters}
+#' \item{\code{log.dens.like(x,data,par.names)}}{LBA likelihood function}}
+#' @export
+LBA.Individual = R6::R6Class('Model.Individual',
 
     public = list(
          conds = c(1,2),
@@ -32,7 +59,7 @@ LBA.Individual = R6::R6Class('Individual.Model',
          log.dens.prior=function(x,hyper){
               out=0
               for (p in names(x)) out =
-                        out+dtnorm(x[p],hyper[[p]][1],hyper[[p]][2],0,Inf,log=TRUE)
+                        out+msm::dtnorm(x[p],hyper[[p]][1],hyper[[p]][2],0,Inf,log=TRUE)
               out
          },
 

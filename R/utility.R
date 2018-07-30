@@ -30,3 +30,24 @@ load_rdata = function(file_name){
      }
      return(dat)
 }
+
+#' Compute Bayes factor from powder objects
+#'
+#' \code{bayes.factor} computes the Bayes factor from the powder objects
+#'
+#' @param m1 a Powder.Hierarchical or Powder.Individual object
+#' @param m2 a Powder.Hierarchical or Powder.Individual object
+#' @param log When TRUE, the natural log of the Bayes factor will be returned.
+#' @return The natural log of the Bayes factor in terms of m1 / m2.
+#' @export
+bayes.factor = function(m1,m2,log=TRUE){
+     bf = data.frame(Method = c('TI','Log Steppingstone','Harmonic Mean'),
+                     Log.Bayes.factor= c(m1$Value[m1$Method == 'TI'] - m2$Value[m1$Method == 'TI'],
+                                 m1$Value[m1$Method == 'Log Steppingstone'] - m2$Value[m1$Method == 'Log Steppingstone'],
+                                 m1$Value[m1$Method == 'Harmonic Mean'] - m2$Value[m1$Method == 'Harmonic Mean']))
+     if (log==FALSE) {
+          bf$Log.Bayes.factor = exp(bf$Log.Bayes.factor)
+          colnames(bf) = c('Method','Bayes factor')
+     }
+     return(bf)
+}

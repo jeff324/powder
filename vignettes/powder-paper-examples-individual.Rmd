@@ -1,0 +1,47 @@
+---
+title: "Individual-subject example from the tutorial paper"
+author: "Jeffrey Annis"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+     %\VignetteIndexEntry{Examples from the tutorial paper}
+     %\VignetteEngine{knitr::rmarkdown}
+     %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+     collapse = TRUE,
+     comment = "#>"
+)
+```
+This vignette describes the individual-subject examples in the paper "Thermodynamic integration and Steppingstone sampling methods for computing Bayes factors: A tutorial" by Annis, Evans, Miller, and Palmeri (submitted). The paper comes bundled with the `powder` package. To view it:
+```{r,eval=FALSE}
+vignette("powder-paper",package = 'powder')
+```
+For the individual-subject examples, we used a dataset containing a single simulated subject in two conditions with 600 trials per condition. The dataset is the same as the "Simple" dataset used in Evans and Brown (2017). We fit two models: a "simple" model with no parameters varying across conditions, and a "complex" model with 3 different parameters varying across conditions: non-decision time `t0`, threshold `b`, and correct drift rate `vc`. Let's load the dataset and create the models.
+```{r}
+library(powder)
+data('individual')
+simple.individual.model = LBA.Individual$new()
+complex.individual.model = LBA.Individual$new(b=TRUE,vc=TRUE,t0=TRUE)
+```
+Now that we have defined the models, let's use `powder` to sample from the power posteriors. We will sample from posteriors raised to 20 temperatures, each with 200 samples. Note, the `meltin` parameter describes how long to adapt to each temperature, akin to burnin.
+```{r,warning=FALSE,eval=FALSE}
+simple.individual.out = powder(model=simple.individual.model,data=individual,
+                               num.temps=20,burnin=500,meltin=50,n.samples=100,verbose=FALSE)
+complex.individual.out = powder(model=complex.individual.model,data=individual,
+                                num.temps=20,burnin=500,meltin=50,n.samples=100,verbose=FALSE)
+```
+Now that we have the samples, let's take a look at the marginal likelihoods.
+```{r,eval=FALSE}
+simple.individual.ml = marginal.likelihood(simple.individual.out)
+complex.individual.ml = marginal.likelihood(complex.individual.out)
+print(simple.individual.ml)
+print(complex.individual.ml)
+```
+It's easy to compute the Bayes factor in terms of the simple model over the complex model:
+```{r,eval=FALSE}
+bf = bayes.factor(simple.individual.ml, complex.individual.ml, log=FALSE)
+print(bf)
+```
