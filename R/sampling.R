@@ -373,11 +373,12 @@ powder.Model.Hierarchical = function(model,data,num.temps=NULL,alpha=.3,high.tem
 get_temperatures = function(num.temps,alpha,high.temps.first,n.sequences,current.sequence){
 
      temperatures = (0:(num.temps-1)/(num.temps-1))^(1/alpha)
-     temperatures = split(temperatures, ceiling(seq_along(temperatures)/(num.temps/n.sequences)))[[current.sequence]]
 
      if(high.temps.first){
           temperatures = rev(temperatures)
      }
+
+     temperatures = split(temperatures, ceiling(seq_along(temperatures)/(num.temps/n.sequences)))[[current.sequence]]
 
      return(temperatures)
 }
