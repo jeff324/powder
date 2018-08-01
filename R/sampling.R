@@ -51,86 +51,22 @@
 #' }
 #' @export
 powder <- function(model,data,num.temps,alpha,high.temps.first,n.sequences,current.sequence,
-                   n.samples,n.chains,burnin,meltin,
-                   de_params=list(b=.001, migration=FALSE,migration.freq=NULL,migration.start=NULL,migration.end=NULL),
-                   sample.posterior,return.samples,verbose,update) UseMethod("powder")
+                   n.samples,n.chains,burnin,meltin,de_params=list(),sample.posterior,
+                   return.samples,verbose,update) UseMethod("powder")
 
 #' @export
 powder.Model.Individual = function(model,data,num.temps=NULL,alpha=.3,high.temps.first=FALSE,n.sequences=1,current.sequence=1,
-                                     n.samples=1000,n.chains=NULL,burnin=500,meltin=250,
-                                     de_params=list(b=.001, migration=FALSE,migration.freq=NULL,migration.start=NULL,migration.end=NULL),
-                                     sample.posterior=FALSE,return.samples=TRUE,verbose=TRUE,update=100){
-
+                                     n.samples=1000,n.chains=NULL,burnin=500,meltin=250,de_params=list(),
+                                   sample.posterior=FALSE,return.samples=TRUE,verbose=TRUE,update=100){
 
      theta.names = model$theta.names
-     prior = model$prior
-     b = de_params$b
-
-     if(is.null(num.temps)){
-          num.temps = 30
-     }
-
-     if(!sample.posterior){
-          temperatures = get_temperatures(num.temps,alpha,high.temps.first,n.sequences,current.sequence)
-          message = 'Sampling power posterior @ temperature'
-     }else{
-          temperatures = 1
-          meltin = 0
-          message = 'Sampling posterior'
-     }
-     if(num.temps == 1){
-          temperatures = 1 #default to posterior sampling
-     }
-
-     if(!de_params$migration){
-          migration.freq=0
-          migration.start= -1
-          migration.end= -1
-     }else if(de_params$migration){
-          if(is.null(migration.freq)){
-               warning('migration.freq not set. Setting migration.frequency = 20')
-               migration.freq = 20
-          }
-          if(is.null(migration.start)){
-               warning('migration.start not set. Setting migration.start = burnin')
-               migration.start = burnin
-          }
-          if(is.null(migration.end)){
-               warning('migration.end not set. Setting migration.end = (n.samples / 2) + burnin')
-               migration.end = (n.samples / 2) + burnin
-          }
-
-     }
-
-     if(is.list(data[[1]])){
-          stop('Expected data[[1]] to be a vector not a list')
-     }
-
      n.pars = length(theta.names)
 
-     if(is.null(n.chains)){
-          n.chains = 3*n.pars
-     }
-     if(n.samples <= 0){
-          stop('n.samples must be > 0')
-     }
-     if(num.temps <= 0){
-          stop('num.temps must be > 0')
-     }
-     if(burnin <= 0){
-          stop('burnin must be > 0')
-     }
-     if(meltin <= 0 & !sample.posterior){
-          stop('meltin must be > 0')
-     }
-     if(n.sequences > num.temps){
-               stop('n.sequences must be <= num.temps')
-          }
-     if(is.null(current.sequence)){
-          stop('please choose current.sequence')
-     }
+     #check and set default parameters
+     check_pars()
 
-
+     #build the model structure
+     prior = model$prior
      theta = array(NA,c(n.chains, n.pars, meltin*length(temperatures) + burnin + n.samples*length(temperatures)))
      weight = array(-Inf,c(meltin*length(temperatures) + burnin + n.samples*length(temperatures),n.chains))
 
@@ -138,12 +74,14 @@ powder.Model.Individual = function(model,data,num.temps=NULL,alpha=.3,high.temps
 
      colnames(theta) = theta.names
 
+     #options list for output
      opt = list(num.temps=num.temps,alpha=alpha,high.temps.first=high.temps.first,
                 n.sequences=n.sequences,current.sequence=current.sequence,n.pars=n.pars,
                 n.samples=n.samples,n.chains=n.chains,burnin=burnin,meltin=meltin,
                 de_params=de_params,sample.posterior=sample.posterior,return.samples=return.samples,
                 temperatures=temperatures)
 
+     #run sampling
      idx = 2
      for (t in 1:length(temperatures)) {
           if(verbose){
@@ -201,8 +139,7 @@ powder.Model.Individual = function(model,data,num.temps=NULL,alpha=.3,high.temps
 #' @export
 powder.Model.Hierarchical = function(model,data,num.temps=NULL,alpha=.3,high.temps.first=FALSE,n.sequences=1,current.sequence=1,
                   n.samples=1000,n.chains=NULL,burnin=500,meltin=250,
-                  de_params=list(b=.001, migration=FALSE,migration.freq=NULL,migration.start=NULL,migration.end=NULL),
-                  sample.posterior=FALSE,return.samples=TRUE,verbose=TRUE,update=10){
+                  de_params=list(),sample.posterior=FALSE,return.samples=TRUE,verbose=TRUE,update=10){
 
 
      theta.names = model$theta.names
@@ -213,69 +150,34 @@ powder.Model.Hierarchical = function(model,data,num.temps=NULL,alpha=.3,high.tem
      n.pars = length(theta.names)
      n.hpars = length(phi.names)
 
-     b = de_params$b
+     check_pars()
 
-     if (is.null(num.temps)) {
-          num.temps = 30
-     }
-
-     if (!sample.posterior) {
-          temperatures = get_temperatures(num.temps, alpha,high.temps.first, n.sequences, current.sequence)
-          message = 'Sampling power posterior @ temperature'
-     } else {
-          temperatures = 1
-          meltin = 0
-          message = 'Sampling posterior'
-     }
-     if (num.temps == 1) {
-          temperatures = 1 #default to posterior sampling
-     }
-
-     if (!de_params$migration) {
+     if (is.null(de_params$migration)) {
+          de_params$migration = FALSE
           migration.freq = 0
           migration.start = -1
           migration.end = -1
-     } else if (de_params$migration) {
-          if (is.null(migration.freq)) {
-               warning('migration.freq not set. Setting migration.frequency = 20')
-               migration.freq = 20
+     } else {
+          if (is.null(de_params$migration.freq)) {
+               warning('migration.freq not specified. Defaulting to 20',call. = FALSE,immediate. = TRUE)
+               de_params$migration.freq = 20
+               migration.freq = de_params$migration.freq
           }
-          if (is.null(migration.start)) {
-               warning('migration.start not set. Setting migration.start = burnin')
+
+          if (is.null(de_params$migration.start)) {
+               warning('migration.start not specified. Defaulting to burnin',call. = FALSE,immediate. = TRUE)
+               de_params$migration.start = burnin
                migration.start = burnin
           }
-          if (is.null(migration.end)) {
-               warning('migration.end not set. Setting migration.end = (n.samples / 2) + burnin')
-               migration.end = (n.samples / 2) + burnin
-          }
 
+          if (is.null(de_params$migration.end)) {
+               warning('migration.end not specified. Defaulting to migration.start + round(n.samples/5)',
+                       call. = FALSE,immediate. = TRUE)
+               de_params$migration.end = de_params$migration.start + round(n.samples/5)
+               migration.end = de_params$migration.start + round(n.samples/5)
+          }
      }
 
-     if (is.null(n.chains)) {
-          n.chains = 3 * n.pars
-     }
-     if (n.samples <= 0) {
-          stop('n.samples must be > 0')
-     }
-     if (num.temps <= 0) {
-          stop('num.temps must be > 0')
-     }
-     if (burnin <= 0) {
-          stop('burnin must be > 0')
-     }
-     if (meltin <= 0 & !sample.posterior) {
-          stop('meltin must be > 0')
-     }
-     if (!is.null(n.sequences)) {
-          if (n.sequences > num.temps) {
-               stop('n.sequences must be <= num.temps')
-          }
-     }
-     if (!is.null(n.sequences)) {
-          if (is.null(current.sequence)) {
-               stop('please choose current.sequence')
-          }
-     }
 
      theta=array(NA, c(n.chains, n.pars, n.subj, meltin*length(temperatures) + burnin + n.samples*length(temperatures)))
      phi=array(NA, c(n.chains, n.hpars, meltin*length(temperatures) + burnin + n.samples*length(temperatures)))
@@ -397,3 +299,72 @@ get_temperatures = function(num.temps,alpha,high.temps.first,n.sequences,current
      return(temperatures)
 }
 
+check_pars = function(){
+
+     de_params = get('de_params',parent.frame())
+
+     if (is.null(de_params$b)) {
+          de_params$b = .001
+          b = de_params$b
+          assign('de_params', value = de_params, envir = parent.frame())
+          assign('b', value = b, envir = parent.frame())
+     }
+
+     if(is.null(get('num.temps',parent.frame()))){
+          assign('num.temps', 30, envir = parent.frame())
+     }
+
+     if(!get('sample.posterior',parent.frame())){
+          temperatures = get_temperatures(get('num.temps',parent.frame()),
+                                          get('alpha',parent.frame()),
+                                          get('high.temps.first',parent.frame()),
+                                          get('n.sequences',parent.frame()),
+                                          get('current.sequence',parent.frame()))
+
+          assign('temperatures',temperatures,envir = parent.frame())
+          assign(message, 'Sampling power posterior @ temperature', envir = parent.frame())
+     }else{
+          assign('temperatures', 1, envir = parent.frame())
+          assign('meltin', 0, envir = parent.frame())
+          assign('message', 'Sampling posterior', envir = parent.frame())
+     }
+
+     if(get('num.temps',parent.frame()) == 1){
+          assign('temperatures', 1, envir = parent.frame()) #default to posterior sampling
+     }
+
+     if(is.list(get('data',parent.frame())[[1]])){
+          stop('Expected data[[1]] to be a vector not a list',call. = FALSE)
+     }
+
+     if(is.null(get('n.chains',parent.frame()))){
+          n.pars = get('n.pars',parent.frame())
+          assign('n.chains', 3*n.pars,  envir =parent.frame())
+     }
+
+     if(get('n.samples',parent.frame()) <= 0){
+          stop('n.samples must be > 0',call. = FALSE)
+     }
+
+     if(get('num.temps',parent.frame()) <= 0){
+          stop('num.temps must be > 0',call. = FALSE)
+     }
+
+     if(get('burnin',parent.frame()) <= 0){
+          stop('burnin must be > 0',call. = FALSE)
+     }
+
+     if(get('meltin',parent.frame()) <= 0 & !get('sample.posterior',parent.frame())){
+          stop('meltin must be > 0',call. = FALSE)
+     }
+
+     if(get('n.sequences',parent.frame()) > get('num.temps',parent.frame())){
+          stop('n.sequences must be <= num.temps',call. = FALSE)
+     }
+
+     if(is.null(get("current.sequence",parent.frame()))){
+          stop('please choose current.sequence',call. = FALSE)
+     }
+
+
+}
