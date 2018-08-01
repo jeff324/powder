@@ -96,13 +96,18 @@ DDM.Individual = R6::R6Class('Model.Individual',
 
          log.dens.prior=function(x,hyper){
               out=0
-              trunc_norm_pars = names(x)[-grep('^v',names(x))]
+              v_idx = grep('^v',names(x))
+              trunc_norm_pars = names(x)[-v_idx]
 
               for (p in trunc_norm_pars) {
                    out = msm::dtnorm(x[p],hyper[[p]][1],hyper[[p]][2],0,Inf,log=TRUE) + out
               }
 
-              out = dnorm(x['v'],hyper[['v']][1],hyper[['v']][2]) + out
+              norm_pars = names(x)[v_idx]
+
+              for (p in norm_pars){
+                   out = dnorm(x[p],hyper[[p]][1],hyper[[p]][2],log=TRUE) + out
+              }
 
               return(out)
          },
@@ -317,8 +322,11 @@ DDM.Individual = R6::R6Class('Model.Individual',
          make.theta.names = function(){
               theta.names=NULL
 
-              zeroed = sapply(1:length(self$prior),function(x) any(length(self$prior[[names(self$prior)[x]]]) == 1 &
-                                   self$prior[[names(self$prior)[x]]] == 0))
+          #    zeroed = sapply(1:length(self$prior),function(x) any(length(self$prior[[names(self$prior)[x]]]) == 1 &
+          #                         self$prior[[names(self$prior)[x]]] == 0))
+
+            zeroed = sapply(1:length(self$prior), function(x) length(self$prior[[x]]) == 1)
+
 
               for (i in 1:length(self$vary.parameter)) {
 
