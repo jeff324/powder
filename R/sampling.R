@@ -72,8 +72,11 @@ powder.Model.Individual = function(model,data,num.temps=NULL,alpha=.3,high.temps
 
      if(!sample.posterior){
           temperatures = get_temperatures(num.temps,alpha,high.temps.first,n.sequences,current.sequence)
+          message = 'Sampling power posterior @ temperature'
      }else{
           temperatures = 1
+          meltin = 0
+          message = 'Sampling posterior'
      }
      if(num.temps == 1){
           temperatures = 1 #default to posterior sampling
@@ -117,7 +120,7 @@ powder.Model.Individual = function(model,data,num.temps=NULL,alpha=.3,high.temps
      if(burnin <= 0){
           stop('burnin must be > 0')
      }
-     if(meltin <= 0){
+     if(meltin <= 0 & !sample.posterior){
           stop('meltin must be > 0')
      }
      if(n.sequences > num.temps){
@@ -145,7 +148,11 @@ powder.Model.Individual = function(model,data,num.temps=NULL,alpha=.3,high.temps
      for (t in 1:length(temperatures)) {
           if(verbose){
                cat('\n')
-               cat(paste('Sampling power posterior @ temperature', temperatures[t],':',t,'/', length(temperatures)))
+               if(sample.posterior){
+                    cat(paste(message))
+               }else{
+                    cat(paste(message, round(temperatures[t]),':',t,'/', length(temperatures)))
+               }
           }
           if (t==1) {
                n.iter = burnin + n.samples
@@ -214,8 +221,11 @@ powder.Model.Hierarchical = function(model,data,num.temps=NULL,alpha=.3,high.tem
 
      if (!sample.posterior) {
           temperatures = get_temperatures(num.temps, alpha,high.temps.first, n.sequences, current.sequence)
+          message = 'Sampling power posterior @ temperature'
      } else {
           temperatures = 1
+          meltin = 0
+          message = 'Sampling posterior'
      }
      if (num.temps == 1) {
           temperatures = 1 #default to posterior sampling
@@ -253,7 +263,7 @@ powder.Model.Hierarchical = function(model,data,num.temps=NULL,alpha=.3,high.tem
      if (burnin <= 0) {
           stop('burnin must be > 0')
      }
-     if (meltin <= 0) {
+     if (meltin <= 0 & !sample.posterior) {
           stop('meltin must be > 0')
      }
      if (!is.null(n.sequences)) {
@@ -290,7 +300,11 @@ powder.Model.Hierarchical = function(model,data,num.temps=NULL,alpha=.3,high.tem
      for (t in 1:length(temperatures)) {
           if(verbose){
                cat('\n')
-               cat(paste('Sampling power posterior @ temperature', temperatures[t],':',t,'/', length(temperatures)))
+               if(sample.posterior){
+                    cat(paste(message))
+               }else{
+                    cat(paste(message, round(temperatures[t]),':',t,'/', length(temperatures)))
+               }
           }
           if (t==1) {
                n.iter = burnin + n.samples
@@ -373,11 +387,12 @@ powder.Model.Hierarchical = function(model,data,num.temps=NULL,alpha=.3,high.tem
 get_temperatures = function(num.temps,alpha,high.temps.first,n.sequences,current.sequence){
 
      temperatures = (0:(num.temps-1)/(num.temps-1))^(1/alpha)
-     temperatures = split(temperatures, ceiling(seq_along(temperatures)/(num.temps/n.sequences)))[[current.sequence]]
 
      if(high.temps.first){
           temperatures = rev(temperatures)
      }
+
+     temperatures = split(temperatures, ceiling(seq_along(temperatures)/(num.temps/n.sequences)))[[current.sequence]]
 
      return(temperatures)
 }
