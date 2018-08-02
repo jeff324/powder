@@ -111,18 +111,34 @@ marginal.likelihood.Powder.Hierarchical = function(pow.out){
      burnin = pow.out$options$burnin
      threads = pow.out$options$n.sequences
      temperatures = pow.out$options$temperatures
+     n.chains = pow.out$options$n.chains
      K = pow.out$options$num.temps
 
-     burnin = rep(c(burnin,rep(meltin,(K/threads)-1)),threads)
-     prob_list = lapply(1:length(prob_list),function(x) prob_list[[x]][burnin[x]:dim(prob_list[[x]])[1],,])
-     prob_list = lapply(1:length(prob_list),function(x) c(do.call(rbind,lapply(1:length(prob_list[[x]][1,,1]),function(c) apply(prob_list[[x]][,c,],1,sum)))))
+     if (pow.out$options$method == 'standard') {
+          burnin = rep(c(burnin,rep(meltin,(K/threads)-1)),threads)
+          prob_list = lapply(1:length(prob_list),function(x) prob_list[[x]][burnin[x]:dim(prob_list[[x]])[1],,])
+          prob_list = lapply(1:length(prob_list),function(x) c(do.call(rbind,lapply(1:length(prob_list[[x]][1,,1]),function(c) apply(prob_list[[x]][,c,],1,sum)))))
 
-     if(pow.out$options$high.temps.first){
-          prob_list = rev(prob_list)
-          temperatures = rev(temperatures)
+          if (pow.out$options$high.temps.first) {
+               prob_list = rev(prob_list)
+               temperatures = rev(temperatures)
+          }
+
+          df = get_estimates(prob_list,temperatures)
      }
 
-     df = get_estimates(prob_list,temperatures)
+     if(pow.out$options$method == 'parallel'){
+          prob_list = sapply(1:n.chains,function(c) apply(prob_list[,c,],1,sum))
+          prob_list = lapply(1:n.chains,function(x) prob_list[burnin:nrow(prob_list),x])
+          prob_list = lapply(1:n.chains,function(x)prob_list[[x]][!is.na(prob_list[[x]])])
+
+          if (pow.out$options$high.temps.first) {
+               prob_list = rev(prob_list)
+               temperatures = rev(temperatures)
+          }
+
+          df = get_estimates(prob_list,temperatures)
+     }
 
      return(df)
 
@@ -138,18 +154,30 @@ marginal.likelihood.Powder.Individual = function(pow.out){
      temperatures = pow.out$options$temperatures
      K = pow.out$options$num.temps
 
-     burnin = rep(c(burnin,rep(meltin,(K/threads)-1)),threads)
-     prob_list = lapply(1:length(prob_list),function(x) prob_list[[x]][burnin[x]:length(prob_list[[x]][,1]),])
+     if (pow.out$options$method == 'standard') {
+          burnin = rep(c(burnin,rep(meltin,(K/threads)-1)),threads)
+          prob_list = lapply(1:length(prob_list),function(x) prob_list[[x]][burnin[x]:length(prob_list[[x]][,1]),])
 
-     if(pow.out$options$high.temps.first){
-          prob_list = rev(prob_list)
-          temperatures = rev(temperatures)
+          if (pow.out$options$high.temps.first) {
+               prob_list = rev(prob_list)
+               temperatures = rev(temperatures)
+          }
+          df = get_estimates(prob_list,temperatures)
      }
-     df = get_estimates(prob_list,temperatures)
+
+     if (pow.out$options$method == 'parallel') {
+          prob_list = lapply(1:ncol(prob_list),function(x) prob_list[burnin:nrow(prob_list),x])
+          if (pow.out$options$high.temps.first) {
+               prob_list = rev(prob_list)
+               temperatures = rev(temperatures)
+          }
+          df = get_estimates(prob_list,temperatures)
+     }
 
      return(df)
 
 }
+
 
 get_estimates = function(prob_list,t){
      mean_lp = sapply(1:length(t),function(x)mean(prob_list[[x]][!is.infinite(prob_list[[x]])]))
@@ -159,7 +187,7 @@ get_estimates = function(prob_list,t){
      ti_all = do.call(rbind,lapply(mean_lp_list,function(x) thermo_int(t,x,mean_var)$ti))
      ti_var = var(ti_all[!is.infinite(ti_all)])/(length(ti_all[!is.infinite(ti_all)]))
      ss_var = var_stepping_stone(prob_list,t)
-     hm = harmonic_mean(prob_list[[length(prob_list)]])
+     hm = harmonic_mean(prob_list[[which(t==1)]])
      step_stone = stepping_stone(prob_list,t)
      step_stone_stable = stepping_stone_stable(prob_list,t)
      df = data.frame('Method'=c('TI','TI Corrected','Harmonic Mean','Steppingstone','Log Steppingstone','TI Variance','Steppingstone Variance'),

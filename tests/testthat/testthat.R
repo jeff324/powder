@@ -108,7 +108,8 @@ test_that('marginal likelihood', {
      expect_is(ml,'data.frame')
 
      model = LBA.Individual$new()
-     out = powder(model=model,data=null[[1]],num.temps=3,burnin=5,meltin=5,n.samples=5,verbose=F)
+     data('individual')
+     out = powder(model=model,data=individual,num.temps=3,burnin=5,meltin=5,n.samples=5,verbose=F)
      ml = marginal.likelihood(out)
      expect_is(ml,'data.frame')
 })

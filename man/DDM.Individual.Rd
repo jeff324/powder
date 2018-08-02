@@ -42,11 +42,7 @@ Individual subject Drift Diffusion Model (DDM)
 \item{\code{prior}}{a list containing priors on all parameters}
 }}
 
-\section{Internal Fields}{
-
-}
-
-\section{Internal Methods}{
+\section{Methods}{
 
 \describe{
 \item{\code{log.dens.prior(x,hyper)}}{likelihood of subject-level parameters given group-level parameters}
@@ -59,15 +55,15 @@ Individual subject Drift Diffusion Model (DDM)
 model = DDM.Individual$new(a=T,v=T,conds=1:3)
 
 # Note, inter-trial-variability components, st0, sv, and sz
-have 3 options: TRUE, FALSE, or 0. When TRUE,
+# have 3 options: TRUE, FALSE, or 0. When TRUE,
 # they will vary across conditions. When FALSE
-they are fit, but not allowed to vary across conditions.
-By default, they are set to 0.
+# they are fit, but not allowed to vary across conditions.
+# By default, they are set to 0.
 
-#st0 is a parameter, other variability parameters are 0
+# st0 is a parameter, other variability parameters are 0
 model_st0 = DDM.Individual$new(st0=FALSE)
 
-#sv is allowed to vary over conditions
+# sv is allowed to vary over conditions
 model_sv = DDM.Individual$new(sv=TRUE)
 
  # Setting priors:
@@ -79,9 +75,9 @@ model_sv = DDM.Individual$new(sv=TRUE)
  sz = c(mu=.2,sigma=.2),
  sv = c(mu=.1,sigma=.1))
 
- #a and v vary across conditions
- #sz and sv are parameters and do not vary across conditions
- #st0 is 0
+ # a and v vary across conditions
+ # sz and sv are parameters and do not vary across conditions
+ # st0 is 0
  model = DDM.Individual$new(a=TRUE,v=TRUE)
 
  # Priors can also be changed after creating the model

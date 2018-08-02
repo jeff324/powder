@@ -18,42 +18,45 @@
 #' model = DDM.Individual$new(a=T,v=T,conds=1:3)
 #'
 #' # Note, inter-trial-variability components, st0, sv, and sz
-#' have 3 options: TRUE, FALSE, or 0. When TRUE,
+#' # have 3 options: TRUE, FALSE, or 0. When TRUE,
 #' # they will vary across conditions. When FALSE
-#' they are fit, but not allowed to vary across conditions.
+#' # they are fit, but not allowed to vary across conditions.
 #' By default, they are set to 0.
 #'
-#' #st0 is a parameter, other variability parameters are 0
-#' model_st0 = DDM.Individual$new(st0=FALSE)
+#' # st0 is a parameter, other variability parameters are 0
+#' model_st0 = DDM$new(st0=FALSE)
 #'
-#' #sv is allowed to vary over conditions
-#' model_sv = DDM.Individual$new(sv=TRUE)
+#' # sv is allowed to vary over conditions
+#' model_sv = DDM$new(sv=TRUE)
 #'
-#'  # Setting priors:
-#'  prior = list(
-#'  a = c(mu=1,sigma=1),
-#'  v = c(mu=1,sigma=1),
-#'  t0 = c(mu=.3,sigma=.3),
-#'  z = c(mu=.5,sigma=.5),
-#'  sz = c(mu=.2,sigma=.2),
-#'  sv = c(mu=.1,sigma=.1))
+#' # Setting priors:
+#' prior = list(
+#'     a = list(mu = c(mu = 1, sigma = 1),
+#'              sigma = c(mu = 1, sigma = 1)),
+#'     v = list(mu = c(mu = 1, sigma = 1),
+#'              sigma = c(mu = 1, sigma = 1)),
+#'     t0 = list(
+#'          mu = c(mu = .3, sigma = .3),
+#'          sigma = c(mu = .3, sigma = .3)),
+#'     st0 = list(
+#'          mu = c(mu = .1, sigma = .1),
+#'          sigma = c(mu = .1, sigma = .1)))
 #'
-#'  #a and v vary across conditions
-#'  #sz and sv are parameters and do not vary across conditions
-#'  #st0 is 0
-#'  model = DDM.Individual$new(a=TRUE,v=TRUE)
+#'  # a and v vary across conditions
+#'  # sz and sv are 0
+#'  # t0 and st0 are parameters that do not vary across conditions
+#'  model = DDM$new(a=TRUE,v=TRUE,prior=prior)
 #'
 #'  # Priors can also be changed after creating the model
-#'  model$prior$a = c(mu=2,sigma=2)
+#'  model$prior$a$mu = c(mu=2,sigma=2)
 #'
 #' }
-#' @section Internal Fields:
 #' @field theta.names a character vector containing the names of the subject-level parameters
 #' @field theta.init a function that provides a random initial value for each subject-level parameter
 #' @field theta.start.point a numeric vector containing means of start points used to initialize in theta.init
 #' @field vary.parameter a logical vector containing parameters to vary
 #' @field prior a list containing priors on all parameters
-#' @section Internal Methods:
+#' @section Methods:
 #' \describe{
 #' \item{\code{log.dens.prior(x,hyper)}}{likelihood of subject-level parameters given group-level parameters}
 #' \item{\code{log.dens.like(x,data,par.names)}}{LBA likelihood function}}
