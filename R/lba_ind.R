@@ -20,6 +20,12 @@
 #' @field theta.start.point a numeric vector containing means of start points used to initialize in theta.init
 #' @field vary.parameter a logical vector containing parameters to vary
 #' @field prior a list containing priors on all parameters
+#' @field contaminant a list specifying two values
+#' \describe{
+#' \item{\code{pct}} the percentage (ranging from 0 to 100) of the LBA distribution assumed to be due to random contaminants.
+#' \item{\code{contaminant_bound}} the upper bound of the contaminant distribution.
+#' The contaminant distribution is assumed to be a uniform spanning from 0 to \code{contaminant_bound}.
+#' }
 #' @section Methods:
 #' \describe{
 #' \item{\code{log.dens.prior(x,hyper)}}{likelihood of subject-level parameters given group-level parameters}
@@ -28,6 +34,9 @@
 LBA.Individual = R6::R6Class('Model.Individual',
 
     public = list(
+
+         contaminant = list('pct' = 0, 'upper.bound' = NULL),
+
          conds = c(1,2),
 
          prior = list(
@@ -113,14 +122,18 @@ LBA.Individual = R6::R6Class('Model.Individual',
                    tmp=private$get.dens.2choice(rt=data$Time[tmp],crct=data$Correct[tmp]==1,b=b,A=A,v=vs,s=s,t0=t0)
 
                    ## density contamination
-                   tmp=0.98*tmp+0.01/5
+                   if (self$contaminant$pct > 0) {
+                        contaminant_pct = self$contaminant$pct * .01 #percent to decimal
+                        tmp = (1-contaminant_pct) * tmp + ((1/self$contaminant$upper.bound) * contaminant_pct)/2
+                        #tmp=0.98*tmp+0.01/5
+                   }
 
                    out=out+sum(log(pmax(tmp,1e-10)))
               }
               return(out)
          },
 
-        initialize = function(A=F,b=F,vc=F,ve=F,t0=F,sve=F,conds=NULL,prior=NULL){
+        initialize = function(A=F,b=F,vc=F,ve=F,t0=F,sve=F,conds=NULL,prior=NULL,contaminant=list()){
              self$vary.parameter['A'] = A
              self$vary.parameter['b'] = b
              self$vary.parameter['t0'] = t0
@@ -128,12 +141,31 @@ LBA.Individual = R6::R6Class('Model.Individual',
              self$vary.parameter['ve'] = ve
              self$vary.parameter['sve'] = sve
 
-             if(!is.null(conds)){
+             if (length(contaminant)!=0) {
+                  if(is.null(contaminant$pct)){
+                       stop('contaminant list must contain an element named \"pct\". Example: list(pct=1,upper.bound=5)',call. = FALSE)
+                  }
+                  if(is.null(contaminant$upper.bound)){
+                       stop('contaminant list must contain an element named \"upper.bound\". Example: list(pct=1,upper.bound=5)',call. = FALSE)
+                  }
+                  if (contaminant$pct >= 0 & contaminant$pct <= 100) {
+                       self$contaminant$pct = contaminant$pct
+                  } else {
+                       stop('Contaminant percentatge must range from 0 to 100',call. = FALSE)
+                  }
+                  if (contaminant$upper.bound > 0){
+                       self$contaminant$upper.bound = contaminant$upper.bound
+                  } else {
+                       stop('Contaminant upper bound must be > 0',call. = FALSE)
+                  }
+             }
+
+             if (!is.null(conds)) {
                   self$conds = conds
              }
              private$make.start.points()
              private$make.theta.names()
-             if(is.null(prior)){
+             if (is.null(prior)) {
                   private$make.prior()
              }
         }
@@ -156,7 +188,7 @@ LBA.Individual = R6::R6Class('Model.Individual',
               par_names = names(self$vary.parameter)
               prior = list()
 
-              for(i in 1:length(par_names)){
+              for (i in 1:length(par_names)) {
                    tmp=grep(par_names[i],self$theta.names,value=TRUE)
                    for (n in 1:length(tmp)) {
                         tmp2=tmp[n]

@@ -20,6 +20,12 @@
 #' @field phi.init a function that initializes the group-level parameters
 #' @field vary.parameter a logical vector containing parameters to vary
 #' @field prior a list containing priors on all parameters
+#' @field contaminant a list specifying two values
+#' \describe{
+#' \item{\code{pct}} the percentage of the LBA distribution assumed to be due to random contaminants.
+#' \item{\code{contaminant_bound}} the upper bound of the contaminant distribution.
+#' The contaminant distribution is assumed to be a uniform spanning from 0 to \code{contaminant_bound}.
+#' }
 #' @section Methods:
 #' \describe{
 #' \item{\code{log.dens.prior(x,hyper)}}{likelihood of subject-level parameters given group-level parameters}
@@ -86,13 +92,32 @@ LBA = R6::R6Class('Model.Hierarchical',
                   (msm::dtnorm(phi[2],prior$mu[1],prior$sigma[2],0,Inf,log=TRUE))
         },
 
-        initialize=function(A=F,b=F,vc=F,ve=F,t0=F,sve=F,conds=NULL,prior=NULL){
+        initialize=function(A=F,b=F,vc=F,ve=F,t0=F,sve=F,conds=NULL,prior=NULL,contaminant=list()){
              self$vary.parameter['A'] = A
              self$vary.parameter['b'] = b
              self$vary.parameter['t0'] = t0
              self$vary.parameter['vc'] = vc
              self$vary.parameter['ve'] = ve
              self$vary.parameter['sve'] = sve
+
+             if (length(contaminant)!=0) {
+                  if(is.null(contaminant$pct)){
+                       stop('contaminant list must contain an element named \"pct\". Example: list(pct=1,upper.bound=5)',call. = FALSE)
+                  }
+                  if(is.null(contaminant$upper.bound)){
+                       stop('contaminant list must contain an element named \"upper.bound\". Example: list(pct=1,upper.bound=5)',call. = FALSE)
+                  }
+                  if (contaminant$pct >= 0 & contaminant$pct <= 100) {
+                       self$contaminant$pct = contaminant$pct
+                  } else {
+                       stop('Contaminant percentatge must range from 0 to 100',call. = FALSE)
+                  }
+                  if (contaminant$upper.bound > 0){
+                       self$contaminant$upper.bound = contaminant$upper.bound
+                  } else {
+                       stop('Contaminant upper bound must be > 0',call. = FALSE)
+                  }
+             }
 
              if(!is.null(conds)){
                   self$conds = conds

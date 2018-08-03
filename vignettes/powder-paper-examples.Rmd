@@ -16,7 +16,7 @@ knitr::opts_chunk$set(
 )
 ```
 
-This vignette describes the hierarchical examples in the paper "Thermodynamic integration and Steppingstone sampling methods for computing Bayes factors: A tutorial" by Annis, Evans, Miller, and Palmeri (submitted). The paper comes bundled with the `powder` package. To view it:
+This vignette describes the hierarchical examples in the paper "Thermodynamic integration and Steppingstone sampling methods for computing Bayes factors: A tutorial" by Annis, Evans, Miller, and Palmeri (submitted). The paper comes bundled with the `powder` package. The examples from Evans and Annis (submitted), "Thermodynamic integration via differential evolution: A method for approximating marginal likelihoods", can be run by supplying the `method='parallel'` argument to `powder`. 
 ```{r,eval=FALSE}
 vignette("powder-paper",package = 'powder')
 ```
@@ -46,7 +46,7 @@ if(dataset=='rae'){
 ```
 To define the simple hierarchical LBA model in the paper do the following:
 ```{r}
-simple.model = LBA$new()
+simple.model = LBA$new(contaminant=list(pct=2,upper.bound=5))
 ```
 Next, define the priors in the paper. Note that LBA priors are all truncated normals with mean `mu`, standard deviation `sigma`, lower bound `0`, and upper bound `Inf`.
 ```{r}
@@ -72,15 +72,15 @@ simple.model$prior$sve$sigma = c(mu=1,sigma=1)
 ```
 We can create the other models quite easily because they share the same priors. Note the priors are the same across conditions. To create the complex model:
 ```{r}
-complex.model = LBA$new(vc = TRUE, b = TRUE, t0 = TRUE, prior = simple.model$prior)
+complex.model = LBA$new(vc = TRUE, b = TRUE, t0 = TRUE, prior = simple.model$prior,contaminant=list(pct=2,upper.bound=5))
 ```
 Drift model
 ```{r} 
-drift.model = LBA$new(vc = TRUE, prior = simple.model$prior)
+drift.model = LBA$new(vc = TRUE, prior = simple.model$prior,contaminant=list(pct=2,upper.bound=5))
 ```
 Threshold model
 ```{r}
-threshold.model = LBA$new(b = TRUE, prior = simple.model$prior)
+threshold.model = LBA$new(b = TRUE, prior = simple.model$prior,contaminant=list(pct=2,upper.bound=5))
 ```
 We can then run each model on the chosen data and compute marginal likelihood. This will take a while at these settings.
 ```{r,eval=FALSE}

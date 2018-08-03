@@ -98,11 +98,11 @@ powder.Model.Individual = function(model,data,num.temps=NULL,alpha=.3,high.temps
      }
 
      if (return.samples) {
-          out = list(log.like.list=samples$log.like.list, theta=samples$theta, options=opt)
+          out = list(log.like.list=samples$log.like.list, theta=samples$theta, options=opt, model=model)
           class(out) = 'Powder.Individual'
           return(out)
      } else {
-          out = list(log.like.list=samples$log.like.list, options=opt)
+          out = list(log.like.list=samples$log.like.list, options=opt, model=model)
           class(out) = 'Powder.Individual'
           return()
      }
@@ -169,11 +169,11 @@ powder.Model.Hierarchical = function(model,data,num.temps=NULL,alpha=.3,high.tem
           cat('\n')
      }
      if (return.samples) {
-          out = list(log.like.list=samples$log.like.list, theta=samples$theta, phi=samples$phi, options=opt)
+          out = list(log.like.list=samples$log.like.list, theta=samples$theta, phi=samples$phi, options=opt, model=model)
           class(out) = 'Powder.Hierarchical'
           return(out)
      } else {
-          out = list(log.like.list=samples$log.like.list, options=opt)
+          out = list(log.like.list=samples$log.like.list, options=opt, model=model)
           class(out) = 'Powder.Hierarchical'
           return(out)
      }

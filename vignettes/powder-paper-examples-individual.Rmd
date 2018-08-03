@@ -23,25 +23,86 @@ For the individual-subject examples, we used a dataset containing a single simul
 ```{r}
 library(powder)
 data('individual')
-simple.individual.model = LBA.Individual$new()
-complex.individual.model = LBA.Individual$new(b=TRUE,vc=TRUE,t0=TRUE)
+simple.individual.model = LBA.Individual$new(contaminant = list(pct=2,upper.bound=5))
+complex.individual.model = LBA.Individual$new(b=TRUE,vc=TRUE,t0=TRUE,contaminant = list(pct=2,upper.bound=5))
 ```
 Now that we have defined the models, let's use `powder` to sample from the power posteriors. We will sample from posteriors raised to 20 temperatures, each with 200 samples. Note, the `meltin` parameter describes how long to adapt to each temperature, akin to burnin.
 ```{r,warning=FALSE,eval=FALSE}
 simple.individual.out = powder(model=simple.individual.model,data=individual,
-                               num.temps=20,burnin=500,meltin=50,n.samples=100,verbose=FALSE)
+                               num.temps=30,burnin=500,meltin=50,n.samples=100)
 complex.individual.out = powder(model=complex.individual.model,data=individual,
-                                num.temps=20,burnin=500,meltin=50,n.samples=100,verbose=FALSE)
+                                num.temps=30,burnin=500,meltin=50,n.samples=100)
 ```
-Now that we have the samples, let's take a look at the marginal likelihoods.
+Now that we have the samples, let's take a look at the marginal likelihoods. Note, the harmonic mean and Steppingstone estimators are different from the other estimates. The harmonic mean tends to overestimate the marginal likelihood and the Steppingstone estimator is unstable because it is estimating p(D) rather than ln(p(D)) like the other estimators. It's advised to not use harmonic mean and to use the Log Steppingstone estimator instead of the Steppingstone estimator.
 ```{r,eval=FALSE}
 simple.individual.ml = marginal.likelihood(simple.individual.out)
-complex.individual.ml = marginal.likelihood(complex.individual.out)
 print(simple.individual.ml)
+
+#                   Method         Value
+# 1                     TI  5.619068e+02
+# 2           TI Corrected  5.622413e+02
+# 3          Harmonic Mean  5.756293e+02
+# 4          Steppingstone 5.719795e+242
+# 5      Log Steppingstone  5.621503e+02
+# 6            TI Variance  2.447853e-03
+# 7 Steppingstone Variance  1.628729e-02
+
+complex.individual.ml = marginal.likelihood(complex.individual.out)
 print(complex.individual.ml)
+
+#                   Method         Value
+# 1                     TI  5.549913e+02
+# 2           TI Corrected  5.555068e+02
+# 3          Harmonic Mean  5.765305e+02
+# 4          Steppingstone 6.268520e+238
+# 5      Log Steppingstone  5.556290e+02
+# 6            TI Variance  3.266298e-03
+# 7 Steppingstone Variance  2.450748e-02
+
 ```
-It's easy to compute the Bayes factor in terms of the simple model over the complex model:
+Sampling from the power posteriors sequentially can be slow, especially for complex models. To sample from the posteriors in parallel, where each chain samples from a different target distribution use the argument `method='parallel`.
 ```{r,eval=FALSE}
-bf = bayes.factor(simple.individual.ml, complex.individual.ml, log=FALSE)
-print(bf)
+simple.individual.out.par = powder(model=simple.individual.model,data=individual,
+                               num.temps=30,burnin=500,n.samples=1000,method='parallel')
+simple.individual.ml.par = marginal.likelihood(simple.individual.out.par)
+print(simple.individual.ml.par)
+
+#                   Method         Value
+# 1                     TI  5.613116e+02
+# 2           TI Corrected  5.616935e+02
+# 3          Harmonic Mean  5.761761e+02
+# 4          Steppingstone 2.700302e+242
+# 5      Log Steppingstone  5.614802e+02
+# 6            TI Variance  4.656865e-03
+# 7 Steppingstone Variance  3.609845e-02
+
+complex.individual.out.par = powder(model=complex.individual.model,data=individual,
+                               num.temps=30,burnin=500,n.samples=2000,method='parallel')
+complex.individual.ml.par = marginal.likelihood(complex.individual.out.par)
+print(complex.individual.ml.par)
+
+#                   Method         Value
+# 1                     TI  5.531538e+02
+# 2           TI Corrected  5.536072e+02
+# 3          Harmonic Mean  5.765168e+02
+# 4          Steppingstone 4.494607e+237
+# 5      Log Steppingstone  5.531707e+02
+# 6            TI Variance  4.026619e-03
+# 7 Steppingstone Variance  7.006088e-02
+```
+It's easy to compute the Bayes factor in terms of the simple model over the complex model.
+```{r,eval=FALSE}
+bayes.factor(simple.individual.ml, complex.individual.ml)
+
+#              Method Log.Bayes.factor
+# 1                TI        6.9154542
+# 2 Log Steppingstone        6.5213709
+# 3     Harmonic Mean       -0.9012413
+
+bayes.factor(simple.individual.ml.par, complex.individual.ml.par)
+
+#              Method Log.Bayes.factor
+# 1                TI        8.1578545
+# 2 Log Steppingstone        8.3094503
+# 3     Harmonic Mean       -0.3406929
 ```
