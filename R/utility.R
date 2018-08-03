@@ -172,7 +172,7 @@ plot.group = function(pow.out,pars,type,options){
           phi = phi[,c('parameter','value')]
           p1 = ggplot2::ggplot(phi,aes(value)) +
                stat_density(geom='line') +
-               facet_grid(parameter~.,scales='free_y') +
+               facet_grid(.~parameter,scales='free_x') +
                theme(legend.position = 'none')
           plot(p1)
      }
