@@ -159,6 +159,26 @@ DDM = R6::R6Class(
                }
           },
 
+          predict = function(pow.out,conds=NULL,thin=1,n=1,subjects=NULL){
+
+               if(is.null(subjects)){
+                    subjects = 1:length(pow.out$theta[1,1,,1])
+               }
+
+               out = plyr::llply(subjects, function(x) private$predict_theta(theta=pow.out$theta[,,x,],
+                                                                             conds=conds,
+                                                                             thin=thin,
+                                                                             n=n,
+                                                                             verbose=FALSE),
+                                 .progress='text'
+               )
+               out = Map(cbind,out,subject=subjects)
+               out = do.call(rbind,out)
+
+               return(out)
+
+          },
+
           initialize = function(a = FALSE,
                                 v = FALSE,
                                 t0 = FALSE,

@@ -192,6 +192,18 @@ DDM.Individual = R6::R6Class('Model.Individual',
               return(out)
          },
 
+         predict = function(pow.out,conds=NULL,thin=1,n=1){
+
+              if(is.null(conds)){
+                   conds = self$conds
+              }
+
+              out = private$predict_theta(theta=pow.out$theta,conds=conds,thin=thin,n=n)
+
+              return(out)
+
+         },
+
          initialize = function(a=FALSE,v=FALSE,t0=FALSE,z=0,sz=0,sv=0,st0=0,conds=NULL,prior=NULL){
 
               self$vary.parameter['a'] = a
@@ -278,6 +290,75 @@ DDM.Individual = R6::R6Class('Model.Individual',
               }
 
               self$theta.start.points = theta.start.points
+         },
+
+         predict_theta = function(theta,conds,thin,n,verbose=TRUE){
+
+              theta = private$prettify_theta(theta,conds,thin)
+
+              #add constants to theta
+              if(length(self$constant) > 0){
+                   cond_df_names = lapply(theta,function(x) colnames(x))
+                   constant_names = names(self$constant)
+                   for(i in 1:length(self$constant)){
+                        theta = Map(cbind,theta,self$constant[i])
+                   }
+
+                   for(i in 1:length(theta)){
+                        colnames(theta[[i]]) = c(cond_df_names[[i]],names(self$constant))
+                   }
+              }
+
+              if(verbose){
+                   progress_type = 'text'
+              } else {
+                   progress_type = 'none'
+              }
+
+              preds = lapply(theta,function(x) plyr::ldply(1:nrow(x), function(y)
+                   rtdists::rdiffusion(n=n,
+                                       a = x[y,'a'],
+                                       v = x[y,'v'],
+                                       t0 = x[y,'t0'],
+                                       z = x[y,'z'] + .5*x[y,'a'],
+                                       sz = x[y,'sz'],
+                                       sv = x[y,'sv'],
+                                       st0 = x[y,'st0']),
+                   .progress = progress_type)
+              )
+              preds = Map(cbind,preds,condition=conds)
+              preds = do.call(rbind,preds)
+              return(preds)
+
+         },
+
+         prettify_theta = function(theta,conds=NULL,thin=1){
+              theta = theta[,,seq(1,length(theta[1,1,]),by=thin)]
+              pars = colnames(theta)
+              n.iter = length(theta[1,1,])
+              n.chains = length(theta[,1,1])
+              theta.list = lapply(1:length(pars), function(x) cbind('iteration'=1:n.iter,'parameter'=pars[x],t(theta[,pars[x],])))
+              theta = data.frame(do.call(rbind,theta.list),stringsAsFactors = FALSE)
+              theta.chains = theta[,3:ncol(theta)]
+              theta.chains[] = lapply(theta.chains,as.numeric)
+              theta[,3:ncol(theta)] = theta.chains
+              colnames(theta) = c('iteration','parameter',1:n.chains)
+              theta$iteration = as.numeric(theta$iteration)
+              theta = reshape2::melt(theta,id.vars = c('parameter','iteration'), value.name='value', variable.name = 'chain')
+              theta = reshape2::dcast(theta,iteration + chain ~ parameter, value.var = 'value')
+              constants = c(1:length(colnames(theta)))[-grep('[.]',colnames(theta))]
+              if (length(constants) > 0) {
+                   varied_pars = lapply(conds,function(x) grep(paste0('.',x),colnames(theta)))
+                   theta = lapply(varied_pars,function(x) theta[,c(x,constants)])
+                   cond_df_names = lapply(theta,function(x) colnames(x))
+                   cond_df_names = lapply(1:length(conds),function(x) gsub(paste0('.',conds[x]),'',cond_df_names[[x]]))
+                   for(i in 1:length(cond_df_names)){
+                        colnames(theta[[i]]) = cond_df_names[[i]]
+                   }
+              } else {
+                   theta = list(theta)
+              }
+              return(theta)
          },
 
          make.prior.default = function(){

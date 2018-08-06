@@ -74,7 +74,7 @@ powder.Model.Individual = function(model,data,num.temps=NULL,alpha=.3,high.temps
           stop('Expected data[[1]] to be a vector not a list',call. = FALSE)
      }
 
-     if (method == 'standard' | method == 'sample.posterior') {
+     if (method == 'standard' | method == 'posterior') {
           samples = standard.sampling.individual(model,data,theta.names,n.pars,temperatures,de_params,
                                                  burnin,meltin,n.samples,n.chains,method,message,
                                                  return.samples,verbose,update)
@@ -143,7 +143,7 @@ powder.Model.Hierarchical = function(model,data,num.temps=NULL,alpha=.3,high.tem
           }
      }
 
-     if (method == 'standard') {
+     if (method == 'standard' | method == 'posterior') {
           samples = standard.sampling.hierarchical(model,data,theta.names,n.pars,temperatures,de_params,
                                                    burnin,meltin,n.samples,n.chains,method,message,
                                                    return.samples,verbose,update)
@@ -206,7 +206,7 @@ check_pars = function(){
           assign('num.temps', 30, envir = parent.frame())
      }
 
-     if (get('method',parent.frame()) != 'sample.posterior') {
+     if (get('method',parent.frame()) != 'posterior') {
           temperatures = get_temperatures(get('num.temps',parent.frame()),
                                           get('alpha',parent.frame()),
                                           get('high.temps.first',parent.frame()),
@@ -248,6 +248,12 @@ check_pars = function(){
                        call. = FALSE, immediate. = TRUE)
           }
 
+     }
+
+     method = get('method',parent.frame())
+     if( !(method == 'parallel' |  method == 'posterior' |  method == 'standard')){
+          stop(paste('method', method, 'not found. Select \'parallel\', \'standard\', or \'posterior\''),
+               call.=FALSE)
      }
 
      if (get('n.samples',parent.frame()) <= 0) {
