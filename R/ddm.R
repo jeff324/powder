@@ -165,6 +165,10 @@ DDM = R6::R6Class(
                     subjects = 1:length(pow.out$theta[1,1,,1])
                }
 
+               if(is.null(conds)){
+                    conds = self$conds
+               }
+
                out = plyr::llply(subjects, function(x) private$predict_theta(theta=pow.out$theta[,,x,],
                                                                              conds=conds,
                                                                              thin=thin,
