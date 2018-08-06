@@ -133,6 +133,19 @@ plot.Powder.Individual = function(x,pars=NULL,type='iteration',options=list(),..
 
 }
 
+array_to_df = function(theta){
+     pars = colnames(theta)
+     theta.list = lapply(1:length(pars), function(x) cbind('iteration'=1:n.iter,'parameter'=pars[x],t(theta[,pars[x],])))
+     theta = data.frame(do.call(rbind,theta.list),stringsAsFactors = FALSE)
+     theta.chains = theta[,3:ncol(theta)]
+     theta.chains[] = lapply(theta.chains,as.numeric)
+     theta[,3:ncol(theta)] = theta.chains
+     colnames(theta) = c('iteration','parameter',1:n.chains)
+     theta$iteration = as.numeric(theta$iteration)
+     theta = reshape2::melt(theta,id.vars = c('parameter','iteration'), value.name='value', variable.name = 'chain')
+     return(theta)
+}
+
 plot.group = function(pow.out,pars,type,options){
 
      if (is.null(pars)) {

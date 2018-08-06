@@ -13,7 +13,7 @@ standard.sampling.individual = function(model,data,theta.names,n.pars,temperatur
      for (t in 1:length(temperatures)) {
           if(verbose){
                cat('\n')
-               if(method=='sample.posterior'){
+               if(method=='posterior'){
                     cat(paste(message))
                }else{
                     cat(paste(message, format(temperatures[t],scientific=T,digits=4),':',t,'/', length(temperatures)))
@@ -120,7 +120,7 @@ standard.sampling.hierarchical = function(model,data,theta.names,n.pars,temperat
      for (t in 1:length(temperatures)) {
           if(verbose){
                cat('\n')
-               if(method=='sample.posterior'){
+               if(method=='posterior'){
                     cat(paste(message))
                }else{
                     cat(paste(message, format(temperatures[t],scientific=T,digits=4),':',t,'/', length(temperatures)))

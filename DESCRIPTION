@@ -16,7 +16,8 @@ Imports:
      R6,
      ggplot2,
      reshape2,
-     rtdists
+     rtdists,
+     plyr
 RoxygenNote: 6.0.1
 Suggests: knitr,
     rmarkdown,

@@ -130,7 +130,16 @@ LBA.Individual = R6::R6Class('Model.Individual',
 
                    out=out+sum(log(pmax(tmp,1e-10)))
               }
-              return(out)
+
+               return(out)
+         },
+
+         predict = function(pow.out,conds=NULL,thin=1,n=1){
+
+           out = private$predict_theta(theta=pow.out$theta,conds=conds,thin=thin,n=n)
+
+           return(out)
+
          },
 
         initialize = function(A=F,b=F,vc=F,ve=F,t0=F,sve=F,conds=NULL,prior=NULL,contaminant=list()){
@@ -181,6 +190,58 @@ LBA.Individual = R6::R6Class('Model.Individual',
                                          rep(self$theta.start.points[[x]],ifelse(self$vary.parameter[[x]],n.cond,1))
                                     })
               self$theta.start.points = unlist(start.points)
+         },
+
+         predict_theta = function(theta,conds=NULL,thin=1,n=1,verbose=TRUE){
+
+              if(is.null(conds)){
+                   conds = self$conds
+              }
+              theta = theta[,,seq(1,length(theta[1,1,]),by=thin)]
+              pars = colnames(theta)
+              n.iter = length(theta[1,1,])
+              n.chains = length(theta[,1,1])
+              theta.list = lapply(1:length(pars), function(x) cbind('iteration'=1:n.iter,'parameter'=pars[x],t(theta[,pars[x],])))
+              theta = data.frame(do.call(rbind,theta.list),stringsAsFactors = FALSE)
+              theta.chains = theta[,3:ncol(theta)]
+              theta.chains[] = lapply(theta.chains,as.numeric)
+              theta[,3:ncol(theta)] = theta.chains
+              colnames(theta) = c('iteration','parameter',1:n.chains)
+              theta$iteration = as.numeric(theta$iteration)
+              theta = reshape2::melt(theta,id.vars = c('parameter','iteration'), value.name='value', variable.name = 'chain')
+              theta = reshape2::dcast(theta,iteration + chain ~ parameter, value.var = 'value')
+              constants = c(1:length(colnames(theta)))[-grep('[.]',colnames(theta))]
+              if (length(constants) > 0) {
+                   varied_pars = lapply(conds,function(x) grep(paste0('.',x),colnames(theta)))
+                   theta = lapply(varied_pars,function(x) theta[,c(x,constants)])
+                   cond_df_names = lapply(theta,function(x) colnames(x))
+                   cond_df_names = lapply(1:length(conds),function(x) gsub(paste0('.',conds[x]),'',cond_df_names[[x]]))
+                   for(i in 1:length(cond_df_names)){
+                        colnames(theta[[i]]) = cond_df_names[[i]]
+                   }
+              } else {
+                   theta = list(theta)
+              }
+
+              if(verbose){
+                   progress_type = 'text'
+              } else {
+                   progress_type = 'none'
+              }
+              preds = lapply(theta,function(x) plyr::ldply(1:nrow(x), function(y)
+                   rtdists::rLBA(n=n,
+                                 A=x[y,'A'],
+                                 b=x[y,'A']+x[y,'b'],
+                                 t0=x[y,'t0'],
+                                 mean_v=c(x[y,'vc'],x[y,'ve']),
+                                 sd_v=c(1,x[y,'sve']),
+                                 silent = T),
+                   .progress = progress_type)
+              )
+              preds = Map(cbind,preds,condition=conds)
+              preds = do.call(rbind,preds)
+              return(preds)
+
          },
 
          make.prior = function(){
