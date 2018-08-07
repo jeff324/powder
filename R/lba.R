@@ -22,8 +22,8 @@
 #' @field prior a list containing priors on all parameters
 #' @field contaminant a list specifying two values
 #' \describe{
-#' \item{\code{pct}} the percentage of the LBA distribution assumed to be due to random contaminants.
-#' \item{\code{contaminant_bound}} the upper bound of the contaminant distribution.
+#' \item{\code{pct}}{the percentage of the LBA distribution assumed to be due to random contaminants.}
+#' \item{\code{contaminant_bound}}{the upper bound of the contaminant distribution.}
 #' The contaminant distribution is assumed to be a uniform spanning from 0 to \code{contaminant_bound}.
 #' }
 #' @section Methods:
