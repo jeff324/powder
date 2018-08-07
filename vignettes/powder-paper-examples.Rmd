@@ -16,9 +16,13 @@ knitr::opts_chunk$set(
 )
 ```
 
-This vignette describes the hierarchical examples in the paper "Thermodynamic integration and Steppingstone sampling methods for computing Bayes factors: A tutorial" by Annis, Evans, Miller, and Palmeri (submitted). The paper comes bundled with the `powder` package. The examples from Evans and Annis (submitted), "Thermodynamic integration via differential evolution: A method for approximating marginal likelihoods", can be run by supplying the `method='parallel'` argument to `powder`. 
+This vignette describes the hierarchical examples in the paper "Thermodynamic integration and Steppingstone sampling methods for computing Bayes factors: A tutorial" by Annis, Evans, Miller, and Palmeri (submitted). The paper comes bundled with the `powder` package. 
 ```{r,eval=FALSE}
 vignette("powder-paper",package = 'powder')
+```
+Additionally, the examples from Evans and Annis (submitted), "Thermodynamic integration via differential evolution: A method for approximating marginal likelihoods", can be run by supplying the `method='parallel'` argument to `powder`. The two methods from the paper, TIDE and TIDEz, can then be run by supplying `de_params = list(randomize_phi=FALSE)` and  `de_params = list(randomize_phi=TRUE)`, respectively to `powder`.
+```{r,eval=FALSE}
+vignette("powder-paper-tide",package = 'powder')
 ```
 In the paper, we used two different simulated datasets, each with 10 simulated subjects in two conditions with 300 trials per condition. The "null" dataset contained no differences in parameters over conditions. The "drift" dataset contained changes in drift rates across conditions. In addition to the two simulated datasets we also used an empirical dataset from Rae et al. (2014).
 

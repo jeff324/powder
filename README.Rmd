@@ -89,7 +89,7 @@ The estimates from each method are similar to one another except for the harmoni
 powder can also be used to obtain posterior samples for parameter estimation.
 
 ```{r,eval=FALSE}
-post.out = powder(data=individual, model=model, burnin=500, n.samples=1000, method='sample.posterior')
+post.out = powder(data=individual, model=model, burnin=500, n.samples=1000, method='posterior')
 ```
 
 We can plot the samples as a function of iteration to visually check for convergence.

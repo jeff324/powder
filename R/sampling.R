@@ -153,7 +153,11 @@ standard.sampling.hierarchical = function(model,data,theta.names,n.pars,temperat
                     if (i%%update == 0)cat("\n ", i, '/', n.iter, ' ')
                }
                phi[,,idx] = phi[,,idx-1]
-               rand.samp = sample(1:n.chains,n.chains)
+               if (de_params$randomize_phi) {
+                    rand.samp = sample(1:n.chains,n.chains)
+               } else {
+                    rand.samp = 1:n.chains
+               }
                for (p in theta.names) {
                     which.theta = match(x=p, table=theta.names)
                     which.phi = grep(paste0('^',p),phi.names)
@@ -165,7 +169,11 @@ standard.sampling.hierarchical = function(model,data,theta.names,n.pars,temperat
                                                  use.theta=theta[rand.samp, which.theta, ,idx-1], use.phi=phi[ , ,idx], prior=prior[[p]], model))
                     }
                }
-               rand.samp = sample(1:n.chains, n.chains)
+               if (de_params$randomize_phi) {
+                    rand.samp = sample(1:n.chains, n.chains)
+               } else {
+                    rand.samp = 1:n.chains
+               }
                hyper = phi[rand.samp, , idx]
 
                for (j in 1:n.subj) {
