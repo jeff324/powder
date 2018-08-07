@@ -68,7 +68,84 @@ powder.Model.Individual = function(model,data,num.temps=NULL,alpha=.3,high.temps
      n.pars = length(theta.names)
 
      #check and set default parameters
-     check_pars()
+
+     if (is.null(de_params$b)) {
+          de_params$b = .001
+     }
+
+     if (is.null(num.temps)) {
+          num.temps = 30
+     }
+
+     if (method != 'posterior') {
+          temperatures = get_temperatures(num.temps,
+                                          alpha,
+                                          high.temps.first,
+                                          n.sequences,
+                                          current.sequence)
+
+          if (method == 'standard') {
+               message = 'Sampling power posterior @ temperature'
+          } else {
+               message = paste('Sampling', length(temperatures),'power posteriors in parallel')
+               metlin = 0
+          }
+     } else {
+          temperatures = 1
+          meltin = 0
+          message = 'Sampling posterior'
+     }
+
+     if (num.temps == 1) {
+          temperatures = 1 #default to posterior sampling
+     }
+
+
+     if (is.null(n.chains)) {
+
+          if(method == 'parallel'){
+               n.chains = length(temperatures)
+          }else{
+               n.pars = n.pars
+               n.chains = 3*n.pars
+          }
+     } else {
+
+          if(method == 'parallel' & n.chains != length(temperatures)){
+               n.chains = length(temperatures)
+               warning('n.chains != num.temps. Setting n.chains = num.temps.',
+                       call. = FALSE, immediate. = TRUE)
+          }
+     }
+
+     if( !(method == 'parallel' |  method == 'posterior' |  method == 'standard')){
+          stop(paste('method', method, 'not found. Select \'parallel\', \'standard\', or \'posterior\''),
+               call.=FALSE)
+     }
+
+     if (n.samples <= 0) {
+          stop('n.samples must be > 0',call. = FALSE)
+     }
+
+     if (num.temps <= 0) {
+          stop('num.temps must be > 0',call. = FALSE)
+     }
+
+     if (burnin < 0) {
+          stop('burnin must be >= 0',call. = FALSE)
+     }
+
+     if (meltin < 0 & method == 'standard') {
+          stop('meltin must be >= 0',call. = FALSE)
+     }
+
+     if (n.sequences > num.temps) {
+          stop('n.sequences must be <= num.temps',call. = FALSE)
+     }
+
+     if (is.null(current.sequence)) {
+          stop('please choose current.sequence',call. = FALSE)
+     }
 
      if (is.list(data[[1]])) {
           stop('Expected data[[1]] to be a vector not a list',call. = FALSE)
@@ -118,7 +195,87 @@ powder.Model.Hierarchical = function(model,data,num.temps=NULL,alpha=.3,high.tem
      theta.names = model$theta.names
      n.pars = length(theta.names)
 
-     check_pars()
+     if (is.null(de_params$b)) {
+          de_params$b = .001
+     }
+
+     if (is.null(num.temps)) {
+          num.temps = 30
+     }
+
+     if (method != 'posterior') {
+          temperatures = get_temperatures(num.temps,
+                                          alpha,
+                                          high.temps.first,
+                                          n.sequences,
+                                          current.sequence)
+
+          if (method == 'standard') {
+               message = 'Sampling power posterior @ temperature'
+          } else {
+               message = paste('Sampling', length(temperatures),'power posteriors in parallel')
+               metlin = 0
+          }
+     } else {
+          temperatures = 1
+          meltin = 0
+          message = 'Sampling posterior'
+     }
+
+     if (num.temps == 1) {
+          temperatures = 1 #default to posterior sampling
+     }
+
+
+     if (is.null(n.chains)) {
+
+          if(method == 'parallel'){
+               n.chains = length(temperatures)
+          }else{
+               n.pars = n.pars
+               n.chains = 3*n.pars
+          }
+     } else {
+
+          if(method == 'parallel' & n.chains != length(temperatures)){
+               n.chains = length(temperatures)
+               warning('n.chains != num.temps. Setting n.chains = num.temps.',
+                       call. = FALSE, immediate. = TRUE)
+          }
+     }
+
+     if( !(method == 'parallel' |  method == 'posterior' |  method == 'standard')){
+          stop(paste('method', method, 'not found. Select \'parallel\', \'standard\', or \'posterior\''),
+               call.=FALSE)
+     }
+
+     if (n.samples <= 0) {
+          stop('n.samples must be > 0',call. = FALSE)
+     }
+
+     if (num.temps <= 0) {
+          stop('num.temps must be > 0',call. = FALSE)
+     }
+
+     if (burnin < 0) {
+          stop('burnin must be >= 0',call. = FALSE)
+     }
+
+     if (meltin < 0 & method == 'standard') {
+          stop('meltin must be >= 0',call. = FALSE)
+     }
+
+     if (n.sequences > num.temps) {
+          stop('n.sequences must be <= num.temps',call. = FALSE)
+     }
+
+     if (is.null(current.sequence)) {
+          stop('please choose current.sequence',call. = FALSE)
+     }
+
+     if (is.null(de_params$randomize_phi)){
+          de_params$randomize_phi = TRUE
+     }
 
      if (is.null(de_params$migration)) {
           de_params$migration = FALSE
@@ -193,92 +350,3 @@ get_temperatures = function(num.temps,alpha,high.temps.first,n.sequences,current
      return(temperatures)
 }
 
-check_pars = function(){
-
-     de_params = get('de_params',parent.frame())
-
-     if (is.null(de_params$b)) {
-          de_params$b = .001
-          assign('de_params', value = de_params, envir = parent.frame())
-     }
-
-     if (is.null(get('num.temps',parent.frame()))) {
-          assign('num.temps', 30, envir = parent.frame())
-     }
-
-     if (get('method',parent.frame()) != 'posterior') {
-          temperatures = get_temperatures(get('num.temps',parent.frame()),
-                                          get('alpha',parent.frame()),
-                                          get('high.temps.first',parent.frame()),
-                                          get('n.sequences',parent.frame()),
-                                          get('current.sequence',parent.frame()))
-
-          assign('temperatures',temperatures,envir = parent.frame())
-          if (get('method',parent.frame()) == 'standard') {
-               assign('message', 'Sampling power posterior @ temperature', envir = parent.frame())
-          } else {
-               assign('message', paste('Sampling', length(temperatures),'power posteriors in parallel'), envir = parent.frame())
-               assign('meltin', 0, envir = parent.frame())
-          }
-     } else {
-          assign('temperatures', 1, envir = parent.frame())
-          assign('meltin', 0, envir = parent.frame())
-          assign('message', 'Sampling posterior', envir = parent.frame())
-     }
-
-     if (get('num.temps',parent.frame()) == 1) {
-          assign('temperatures', 1, envir = parent.frame()) #default to posterior sampling
-     }
-
-
-     if (is.null(get('n.chains',parent.frame()))) {
-
-          if(get('method',parent.frame()) == 'parallel'){
-               assign('n.chains',length(temperatures), envir = parent.frame())
-          }else{
-               n.pars = get('n.pars',parent.frame())
-               assign('n.chains', 3*n.pars,  envir =parent.frame())
-          }
-
-     } else {
-
-          if(get('method',parent.frame()) == 'parallel' & get('n.chains',parent.frame()) != length(temperatures)){
-               assign('n.chains',length(temperatures), envir = parent.frame())
-               warning('n.chains != num.temps. Setting n.chains = num.temps.',
-                       call. = FALSE, immediate. = TRUE)
-          }
-
-     }
-
-     method = get('method',parent.frame())
-     if( !(method == 'parallel' |  method == 'posterior' |  method == 'standard')){
-          stop(paste('method', method, 'not found. Select \'parallel\', \'standard\', or \'posterior\''),
-               call.=FALSE)
-     }
-
-     if (get('n.samples',parent.frame()) <= 0) {
-          stop('n.samples must be > 0',call. = FALSE)
-     }
-
-     if (get('num.temps',parent.frame()) <= 0) {
-          stop('num.temps must be > 0',call. = FALSE)
-     }
-
-     if (get('burnin',parent.frame()) < 0) {
-          stop('burnin must be >= 0',call. = FALSE)
-     }
-
-     if (get('meltin',parent.frame()) < 0 & get('method',parent.frame()) == 'standard') {
-          stop('meltin must be >= 0',call. = FALSE)
-     }
-
-     if (get('n.sequences',parent.frame()) > get('num.temps',parent.frame())) {
-          stop('n.sequences must be <= num.temps',call. = FALSE)
-     }
-
-     if (is.null(get("current.sequence",parent.frame()))) {
-          stop('please choose current.sequence',call. = FALSE)
-     }
-
-
-}

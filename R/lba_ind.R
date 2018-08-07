@@ -136,9 +136,13 @@ LBA.Individual = R6::R6Class('Model.Individual',
 
          predict = function(pow.out,conds=NULL,thin=1,n=1){
 
-           out = private$predict_theta(theta=pow.out$theta,conds=conds,thin=thin,n=n)
+              if(is.null(conds)){
+                   conds = self$conds
+              }
 
-           return(out)
+              out = private$predict_theta(theta=pow.out$theta,conds=conds,thin=thin,n=n)
+
+              return(out)
 
          },
 
@@ -194,9 +198,30 @@ LBA.Individual = R6::R6Class('Model.Individual',
 
          predict_theta = function(theta,conds=NULL,thin=1,n=1,verbose=TRUE){
 
-              if(is.null(conds)){
-                   conds = self$conds
+              theta = private$prettify_theta(theta,conds,thin)
+
+              if(verbose){
+                   progress_type = 'text'
+              } else {
+                   progress_type = 'none'
               }
+              preds = lapply(theta,function(x) plyr::ldply(1:nrow(x), function(y)
+                   rtdists::rLBA(n=n,
+                                 A=x[y,'A'],
+                                 b=x[y,'A']+x[y,'b'],
+                                 t0=x[y,'t0'],
+                                 mean_v=c(x[y,'vc'],x[y,'ve']),
+                                 sd_v=c(1,x[y,'sve']),
+                                 silent = T),
+                   .progress = progress_type)
+              )
+              preds = Map(cbind,preds,condition=conds)
+              preds = do.call(rbind,preds)
+              return(preds)
+
+         },
+
+         prettify_theta = function(theta,conds=NULL,thin=1){
               theta = theta[,,seq(1,length(theta[1,1,]),by=thin)]
               pars = colnames(theta)
               n.iter = length(theta[1,1,])
@@ -222,26 +247,7 @@ LBA.Individual = R6::R6Class('Model.Individual',
               } else {
                    theta = list(theta)
               }
-
-              if(verbose){
-                   progress_type = 'text'
-              } else {
-                   progress_type = 'none'
-              }
-              preds = lapply(theta,function(x) plyr::ldply(1:nrow(x), function(y)
-                   rtdists::rLBA(n=n,
-                                 A=x[y,'A'],
-                                 b=x[y,'A']+x[y,'b'],
-                                 t0=x[y,'t0'],
-                                 mean_v=c(x[y,'vc'],x[y,'ve']),
-                                 sd_v=c(1,x[y,'sve']),
-                                 silent = T),
-                   .progress = progress_type)
-              )
-              preds = Map(cbind,preds,condition=conds)
-              preds = do.call(rbind,preds)
-              return(preds)
-
+              return(theta)
          },
 
          make.prior = function(){
