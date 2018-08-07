@@ -4,9 +4,11 @@
 \alias{powder}
 \title{Power posterior sampling using differential evolution}
 \usage{
-powder(model, data, num.temps, alpha, high.temps.first, n.sequences,
-  current.sequence, n.samples, n.chains, burnin, meltin, de_params = list(),
-  method, return.samples, verbose, update)
+powder(model, data, num.temps = NULL, alpha = 0.3,
+  high.temps.first = FALSE, n.sequences = 1, current.sequence = 1,
+  n.samples = 1000, n.chains = NULL, burnin = 500, meltin = 250,
+  de_params = list(), method = "standard", return.samples = TRUE,
+  verbose = TRUE, update = 100)
 }
 \arguments{
 \item{model}{See \code{\link{LBA}} for more information and an example.}
@@ -82,11 +84,10 @@ Note, if \code{return.samples = FALSE} then only \code{log.like.list} will be re
 }
 \examples{
 \dontrun{
-model = LBA$new(b=T)
-data('null',package='powder')
-num.temps = 30
-pow.out = powder(data=null, model=model, num.temps=num.temps)
-est = marginal_likelihood(pow.out)
+model = LBA.Individual$new(b=T)
+data('individual',package='powder')
+pow.out = powder(data=individual, model=model, num.temps=30)
+est = marginal.likelihood(pow.out)
 print(est)
 }
 }
