@@ -94,7 +94,7 @@ post.out = powder(data=individual, model=model, burnin=500, n.samples=1000, meth
 
 We can plot the samples as a function of iteration to visually check for convergence.
 ```{r,eval=FALSE}
-plot(post.out)
+traceplot(post.out)
 ```
 
 ```{r, echo=FALSE, out.width = '50%'}
@@ -105,7 +105,7 @@ We can see there is a chain that is stuck until around 500 samples past our burn
 
 ```{r,eval=FALSE}
 post.out$options$burnin = 1000
-plot(post.out)
+traceplot(post.out)
 ```
 
 ```{r, echo=FALSE, out.width = '50%'}
@@ -115,7 +115,7 @@ knitr::include_graphics("vignettes/lba_ind_iteration_cut.jpeg")
 Now that we have a good sample, we can plot the densities.
 
 ```{r,eval=FALSE}
-plot(post.out,type='density')
+densplot(post.out)
 ```
 
 ```{r, echo=FALSE, out.width = '65%'}
