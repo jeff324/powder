@@ -54,10 +54,7 @@ traceplot.Powder.Individual = function(x,pars=NULL,options=list(),...){
           pars = colnames(pow.out$theta)
      }
 
-     #use the group plotting function since theta has
-     #same structure as phi
-     pow.out$phi = pow.out$theta
-     traceplot.group(pow.out,pars,options)
+     traceplot.individual(pow.out,pars,options)
 
 }
 
@@ -102,10 +99,7 @@ densplot.Powder.Individual = function(x,pars=NULL,options=list(),...){
           pars = colnames(pow.out$theta)
      }
 
-     #use the group plotting function since theta has
-     #same structure as phi
-     pow.out$phi = pow.out$theta
-     densplot.group(pow.out,pars,options)
+     densplot.individual(pow.out,pars,options)
 
 }
 
@@ -132,10 +126,42 @@ densplot.Powder.Hierarchical = function(x, pars=NULL, options=list(), subject=NU
 
 }
 
+densplot.individual = function(pow.out,pars,options){
+
+     theta = reshape.theta(pow.out,pars,options$with.burnin)
+
+     theta = theta[,c('parameter','value')]
+     p1 = ggplot2::ggplot(theta,aes(value)) +
+          stat_density(geom='line') +
+          facet_grid(.~parameter,scales='free_x') +
+          theme(legend.position = 'none')
+     plot(p1)
+     if (options$return.plot) {
+          return(p1)
+     }
+
+}
+
+traceplot.individual = function(pow.out,pars,options){
+
+     theta = reshape.theta(pow.out,pars,options$with.burnin)
+
+     p1 = ggplot2::ggplot(theta,aes(x=iteration,y=value,group=chain,color=chain)) +
+          geom_line() +
+          facet_grid(parameter~.,scales='free_y') +
+          theme(legend.position = 'none')
+     plot(p1)
+
+
+     if (options$return.plot) {
+          return(p1)
+     }
+}
+
 
 densplot.subject = function(pow.out,pars,subject,options){
 
-     theta = reshape.theta(pow.out,pars,subject,options)
+     theta = reshape.theta(pow.out,pars,options$with.burnin,subject)
      theta = theta[,c('parameter','value','subject')]
      p1 = ggplot2::ggplot(theta,aes(value)) +
           stat_density(geom='line') +
@@ -149,7 +175,7 @@ densplot.subject = function(pow.out,pars,subject,options){
 
 densplot.group = function(pow.out,pars,options){
 
-     phi = reshape.phi(pow.out,pars,options)
+     phi = reshape.phi(pow.out,pars,options$with.burnin)
      phi = phi[,c('parameter','value')]
      p1 = ggplot2::ggplot(phi,aes(value)) +
           stat_density(geom='line') +
@@ -164,7 +190,7 @@ densplot.group = function(pow.out,pars,options){
 
 traceplot.subject = function(pow.out,pars,subject,options){
 
-     theta = reshape.theta(pow.out,pars,subject,options)
+     theta = reshape.theta(pow.out,pars,options$with.burnin,subject)
 
      p1 = ggplot2::ggplot(theta,aes(x=iteration,y=value,group=chain,color=chain)) +
           geom_line() +
@@ -180,7 +206,7 @@ traceplot.subject = function(pow.out,pars,subject,options){
 
 traceplot.group = function(pow.out,pars,options){
 
-     phi = reshape.phi(pow.out,pars,options)
+     phi = reshape.phi(pow.out,pars,options$with.burnin)
 
      p1 = ggplot2::ggplot(phi,aes(x=iteration,y=value,group=chain,color=chain)) +
           geom_line() +
@@ -195,64 +221,5 @@ traceplot.group = function(pow.out,pars,options){
 }
 
 
-reshape.phi = function(pow.out,pars,options){
-     if (is.null(pars)) {
-          pars = colnames(pow.out$phi)
-     }
-
-     burnin = pow.out$options$burnin
-
-     if (options$with.burnin) {
-          phi = pow.out$phi
-     } else {
-          phi = pow.out$phi[,,burnin:length(pow.out$phi[1,1,])]
-     }
-
-     n.iter = length(phi[1,1,])
-     n.chains = length(phi[,1,1])
-
-     #reshape for ggplot
-     phi.list = lapply(1:length(pars), function(x) cbind('iteration'=1:n.iter,'parameter'=pars[x],t(phi[,pars[x],])))
-     phi = data.frame(do.call(rbind,phi.list),stringsAsFactors = FALSE)
-     phi.chains = phi[,3:ncol(phi)]
-     phi.chains[] = lapply(phi.chains,as.numeric)
-     phi[,3:ncol(phi)] = phi.chains
-     colnames(phi) = c('iteration','parameter',1:n.chains)
-     phi$iteration = as.numeric(phi$iteration)
-     phi = reshape2::melt(phi,id.vars = c('parameter','iteration'), value.name='value', variable.name = 'chain')
-     return(phi)
-}
-
-
-
-reshape.theta = function(pow.out,pars,subject,options){
-     if (is.null(pars)) {
-          pars = colnames(pow.out$theta)
-     }
-
-     burnin = pow.out$options$burnin
-
-     if (options$with.burnin) {
-          theta = pow.out$theta
-     } else {
-          theta = pow.out$theta[,,,burnin:length(pow.out$theta[1,1,1,])]
-     }
-
-     n.iter = length(theta[1,1,1,])
-     n.chains = length(theta[,1,1,1])
-
-     theta.list = lapply(1:length(subject),
-                         function(s) do.call(rbind,lapply(1:length(pars),
-                                                          function(p) cbind('iteration'=1:n.iter,'parameter'=pars[p],t(theta[,pars[p],subject[s],])) )))
-     theta.list = Map(cbind,subject=subject,theta.list)
-     theta = data.frame(do.call(rbind,theta.list),stringsAsFactors = FALSE)
-     theta.chains = theta[,4:ncol(theta)]
-     theta.chains[] = lapply(theta.chains,as.numeric)
-     theta[,4:ncol(theta)] = theta.chains
-     colnames(theta) = c('subject','iteration','parameter',1:n.chains)
-     theta$iteration = as.numeric(theta$iteration)
-     theta = reshape2::melt(theta,id.vars = c('parameter','subject','iteration'),value.name='value',variable.name = 'chain')
-     return(theta)
-}
 
 
