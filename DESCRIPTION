@@ -8,7 +8,7 @@ Description: Samples from power posteriors via differential evolution. The sampl
     are then used to estimate the marginal likelihood. Posterior estimation
     is also available. The package includes the Linear Ballistic Accumulator 
     and Drift Diffusion models as examples, but can be extended to sample from any model. 
-License: GPL-3
+License: GPL-3 | file LICENSE
 Encoding: UTF-8
 LazyData: true
 Imports:
@@ -17,7 +17,8 @@ Imports:
      ggplot2,
      reshape2,
      rtdists,
-     plyr
+     plyr,
+     tibble
 RoxygenNote: 6.0.1
 Suggests: knitr,
     rmarkdown,

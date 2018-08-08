@@ -67,7 +67,7 @@ pow.out.par = powder(data=individual, model = model, num.temps = 30, n.samples =
 Lastly, we can estimate the marginal likelihood with:
 
 ``` r
-marginal.likelihood(pow.out)
+summary(pow.out)
 
 #                   Method         Value
 # 1                     TI  5.618604e+02
@@ -78,7 +78,7 @@ marginal.likelihood(pow.out)
 # 6            TI Variance  2.653665e-03
 # 7 Steppingstone Variance  2.263343e-02
 
-marginal.likelihood(pow.out.par)
+summary(pow.out.par)
 
 #                   Method         Value
 # 1                     TI  5.628619e+02

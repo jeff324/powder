@@ -51,3 +51,116 @@ bayes.factor = function(m1,m2,log=TRUE){
      }
      return(bf)
 }
+
+#' Convert theta array to dataframe
+#'
+#' Reshapes the subject-level parameters in Powder.Individual or Powder.Hierarchical objects to a dataframe for easier analysis.
+#'
+#' @param pow.out Powder.Individual or Powder.Hierarchical object
+#' @param pars subset of parameters to reshape. Defaults to all parameters.
+#' @param subject subset of subjects to reshape. Defaults to all subjects.
+#' @param with.burnin if false, burnin is discarded
+#' @param ... additional arguments
+#' @return A dataframe with columns corresponding to parameter, iteration, chain, value,
+#' and subject if Powder.Hierarchical object.
+#' @examples
+#' \dontrun{
+#' data('null')
+#' lba = LBA$new()
+#' #low number of samples for illustration purposes
+#' out = powder(model=lba,data=null,burnin=10,n.samples=10,method='posterior')
+#' phi_df = reshape.phi(out)
+#' }
+#' @export
+reshape.theta = function(pow.out,pars=NULL,with.burnin=FALSE,...) UseMethod('reshape.theta')
+
+#' @export
+reshape.theta.Powder.Individual = function(pow.out,pars=NULL,with.burnin=FALSE,...){
+     pow.out$phi = pow.out$theta
+     theta = reshape.phi(pow.out,pars,with.burnin)
+     return(theta)
+}
+
+#' @export
+reshape.theta.Powder.Hierarchical = function(pow.out,pars=NULL,with.burnin=FALSE,subject=NULL, ...){
+
+     if (is.null(pars)) {
+          pars = colnames(pow.out$theta)
+     }
+
+     if (is.null(subject)) {
+          subject = 1:length(pow.out$theta[1,1,,1])
+     }
+
+     burnin = pow.out$options$burnin
+     n.iter = length(pow.out$theta[1,1,1,])
+     n.chains = length(pow.out$theta[,1,1,1])
+
+     if (with.burnin) {
+          theta = pow.out$theta
+          iter = 1:n.iter
+     } else {
+          theta = pow.out$theta[,,,burnin:n.iter]
+          iter = burnin:n.iter
+     }
+
+     theta.list = lapply(1:length(subject),
+                         function(s) do.call(rbind,lapply(1:length(pars),
+                                                          function(p) cbind('iteration'=iter,'parameter'=pars[p],t(theta[,pars[p],subject[s],])) )))
+     theta.list = Map(cbind,subject=subject,theta.list)
+     theta = data.frame(do.call(rbind,theta.list),stringsAsFactors = FALSE)
+     theta.chains = theta[,4:ncol(theta)]
+     theta.chains[] = lapply(theta.chains,as.numeric)
+     theta[,4:ncol(theta)] = theta.chains
+     colnames(theta) = c('subject','iteration','parameter',1:n.chains)
+     theta$iteration = as.numeric(theta$iteration)
+     theta = reshape2::melt(theta,id.vars = c('parameter','subject','iteration'),value.name='value',variable.name = 'chain')
+     return(theta)
+}
+
+#' Convert phi array to dataframe
+#'
+#'  Reshapes the group-level parameters in Powder.Individual or Powder.Hierarchical objects to a dataframe for easier analysis.
+#'
+#' @param pow.out Powder.Hierarchical object
+#' @param pars subset of parameters to reshape. Defaults to all parameters.
+#' @return A dataframe with columns corresponding to parameter, iteration, chain, and value
+#' @param with.burnin if false, burnin is discarded
+#' @examples
+#' \dontrun{
+#' data('null')
+#' lba = LBA$new()
+#' #low number of samples for illustration purposes
+#' out = powder(model=lba,data=null,burnin=10,n.samples=10,method='posterior')
+#' phi_df = reshape.phi(out)
+#' }
+#' @export
+reshape.phi = function(pow.out,pars=NULL,with.burnin=FALSE){
+
+     if (is.null(pars)) {
+          pars = colnames(pow.out$phi)
+     }
+
+     burnin = pow.out$options$burnin
+     n.iter = length(pow.out$phi[1,1,])
+     n.chains = length(pow.out$phi[,1,1])
+
+     if (with.burnin) {
+          phi = pow.out$phi
+          iter = 1:n.iter
+     } else {
+          phi = pow.out$phi[,,burnin:n.iter]
+          iter = burnin:n.iter
+     }
+
+     phi.list = lapply(1:length(pars), function(x) cbind('iteration'=iter,'parameter'=pars[x],t(phi[,pars[x],])))
+     phi = data.frame(do.call(rbind,phi.list),stringsAsFactors = FALSE)
+     phi.chains = phi[,3:ncol(phi)]
+     phi.chains[] = lapply(phi.chains,as.numeric)
+     phi[,3:ncol(phi)] = phi.chains
+     colnames(phi) = c('iteration','parameter',1:n.chains)
+     phi$iteration = as.numeric(phi$iteration)
+     phi = reshape2::melt(phi,id.vars = c('parameter','iteration'), value.name='value', variable.name = 'chain')
+     return(phi)
+}
+
