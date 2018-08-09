@@ -1,17 +1,16 @@
-#' Plots the samples by iteration of each chain
+#' Trace plot of MCMC chains
 #'
-#' \code{traceplot}
+#' Displays a plot of iterations as a function of sampled values with a separate plot per variable.
 #' @import ggplot2
 #' @importFrom graphics plot
 #' @param x a Powder.Individual or Powder.Hierarchical object
 #' @param pars a character vector of parameters to plot
 #' @param subject a numeric vector of subject numbers to plot. If not supplied, the group-level parameters will be plotted.
 #' @param options a list that can supply any of the following components
-#' \describe{
-#' \item{\code{with.burnin}}{a \code{\link{logical}} indicating whether to include burnin with plot. Defaults to false.}
-#' \item{\code{ggplot_theme}}{a ggplot theme}
-#' \item{\code{return.plot}}{a \code{\link{logical}} indicating whether to return the ggplot object. A plot will be displayed regardless. Defaults to false.}
-#' }
+#' * \code{with.burnin} a \code{\link{logical}} indicating whether to include burnin with plot. Defaults to false.
+#' * \code{ggplot_theme} a ggplot theme
+#' * \code{return.plot} a \code{\link{logical}} indicating whether to return the ggplot object. A plot will be displayed regardless. Defaults to false.
+#' @md
 #' @param ... additional arguments
 #' @return A plot of the samples as a function of iteration, parameter, and if supplied, subject
 #' @export

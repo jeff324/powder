@@ -35,7 +35,7 @@ complex.individual.out = powder(model=complex.individual.model,data=individual,
 ```
 Now that we have the samples, let's take a look at the marginal likelihoods. Note, the harmonic mean and Steppingstone estimators are different from the other estimates. The harmonic mean tends to overestimate the marginal likelihood and the Steppingstone estimator is unstable because it is estimating p(D) rather than ln(p(D)) like the other estimators. It's advised to not use harmonic mean and to use the Log Steppingstone estimator instead of the Steppingstone estimator.
 ```{r,eval=FALSE}
-simple.individual.ml = marginal.likelihood(simple.individual.out)
+simple.individual.ml = summary(simple.individual.out)
 print(simple.individual.ml)
 
 #                   Method         Value
@@ -47,7 +47,7 @@ print(simple.individual.ml)
 # 6            TI Variance  2.447853e-03
 # 7 Steppingstone Variance  1.628729e-02
 
-complex.individual.ml = marginal.likelihood(complex.individual.out)
+complex.individual.ml = summary(complex.individual.out)
 print(complex.individual.ml)
 
 #                   Method         Value
@@ -78,7 +78,7 @@ print(simple.individual.ml.par)
 
 complex.individual.out.par = powder(model=complex.individual.model,data=individual,
                                num.temps=30,burnin=500,n.samples=2000,method='parallel')
-complex.individual.ml.par = marginal.likelihood(complex.individual.out.par)
+complex.individual.ml.par = summary(complex.individual.out.par)
 print(complex.individual.ml.par)
 
 #                   Method         Value
