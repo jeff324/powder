@@ -5,7 +5,7 @@ powder
 
 **pow**er posteriors via **d**ifferential **e**volution in **r**
 
-When presented with several competing formal models, one is required to select between these different explanations: a process commonly known as model selection. One of the more robust methods of performing model selection is through Bayes factors. `powder` estimates the Bayes factor via thermodynamic integration (Friel & Pettitt, 2008; Lartillot & Philippe, 2006) and steppingstone sampling (Xie, Lewis, Fan, Kuo, & Chen, 2011) by sampling from power posteriors using differential evolution MCMC.
+When presented with several competing formal models, one is required to select between these different explanations: a process commonly known as model selection. One of the more robust methods of performing model selection is through marginal likelihoods, which can be used to compute Bayes factors. `powder` estimates marginal likelihoods via thermodynamic integration (Friel & Pettitt, 2008; Lartillot & Philippe, 2006) and steppingstone sampling (Xie, Lewis, Fan, Kuo, & Chen, 2011) by sampling from power posteriors using differential evolution MCMC.
 
 Code
 ----
