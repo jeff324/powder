@@ -2,7 +2,7 @@
 % Please edit documentation in R/plotting.R
 \name{traceplot}
 \alias{traceplot}
-\title{Plots the samples by iteration of each chain}
+\title{Trace plot of MCMC chains}
 \usage{
 traceplot(x, pars = NULL, options = list(), ...)
 }
@@ -12,10 +12,10 @@ traceplot(x, pars = NULL, options = list(), ...)
 \item{pars}{a character vector of parameters to plot}
 
 \item{options}{a list that can supply any of the following components
-\describe{
-\item{\code{with.burnin}}{a \code{\link{logical}} indicating whether to include burnin with plot. Defaults to false.}
-\item{\code{ggplot_theme}}{a ggplot theme}
-\item{\code{return.plot}}{a \code{\link{logical}} indicating whether to return the ggplot object. A plot will be displayed regardless. Defaults to false.}
+\itemize{
+\item \code{with.burnin} a \code{\link{logical}} indicating whether to include burnin with plot. Defaults to false.
+\item \code{ggplot_theme} a ggplot theme
+\item \code{return.plot} a \code{\link{logical}} indicating whether to return the ggplot object. A plot will be displayed regardless. Defaults to false.
 }}
 
 \item{...}{additional arguments}
@@ -26,5 +26,5 @@ traceplot(x, pars = NULL, options = list(), ...)
 A plot of the samples as a function of iteration, parameter, and if supplied, subject
 }
 \description{
-\code{traceplot}
+Displays a plot of iterations as a function of sampled values with a separate plot per variable.
 }

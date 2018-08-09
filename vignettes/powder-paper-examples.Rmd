@@ -95,18 +95,18 @@ num.temps = 35
 
 simple.out = powder(data=dat, model=simple.model, num.temps = num.temps, 
                     n.samples = n.samples, burnin = burnin, meltin = meltin)
-simple.ml = marginal.likelihood(simple.out)
+simple.ml = summary(simple.out)
 
 complex.out = powder(data=dat, model=complex.model, num.temps = num.temps, 
                     n.samples = n.samples, burnin = burnin, meltin = meltin)
-complex.ml = marginal.likelihood(complex.out)
+complex.ml = summary(complex.out)
 
 drift.out = powder(data=dat, model=drift.model, num.temps = num.temps, 
                     n.samples = n.samples, burnin = burnin, meltin = meltin)
-drift.ml = marginal.likelihood(drift.out)
+drift.ml = summary(drift.out)
 
 threshold.out = powder(data=dat, model=threshold.model, num.temps = num.temps, 
                     n.samples = n.samples, burnin = burnin, meltin = meltin)
-threshold.ml = marginal.likelihood(threshold.out)
+threshold.ml = summary(threshold.out)
 
 ```

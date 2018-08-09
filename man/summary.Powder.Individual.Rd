@@ -10,23 +10,26 @@
 \item{object}{A Powder.Individual or Powder.Hierarchical object from \code{\link{powder}}}
 }
 \value{
-A \code{\link{tibble}}. See details.
+A \code{\link{tibble}}. If the Powder.* object was generated via the \code{standard} or \code{parallel} method from \code{\link{powder}} then the returned value will be a \code{\link{tibble}} with the following rows:
+\describe{
+\item{\code{TI}}{log marginal likelihood estimate based on thermodynamic integration}
+\item{\code{TI Corrected}}{log marginal likelihood estimate based on modified thermodynamic integration using variance of log likelihood}
+\item{\code{Harmonic Mean}}{log marginal likelihood estimate based on harmonic mean}
+\item{\code{Steppingstone}}{marginal likelihood esimate based on steppingstone estimator. Because of underflow, this will usually not be meaningful.}
+\item{\code{Log Steppingstone}}{log marginal likelihood estimate based on steppingstone estimator.}
+\item{\code{TI Variance}}{estimated variance of \code{TI}}
+\item{\code{Steppingstone Variance}}{estimated variance of \code{Log Steppingstone}}
+}
+
+If the object was generated via the \code{posterior} method from \code{\link{powder}} then the returned value will be a \code{\link{tibble}} with the following columns:
+\describe{
+\item{\code{mean}}{the mean of the parameter}
+\item{\code{95\% HDI UB}}{upper bound of 95\% highest density interval}
+\item{\code{95\% HDI LB}}{lower bound of 95\% highest density interval}
+}
 }
 \description{
 Estimates marginal likelihood using output from \code{powder}
-}
-\details{
-If the Powder.* object was generated via the \code{standard} or \code{parallel} method
-from \code{\link{powder}} then the returned value will be a \code{link{tibble}} with the following rows:
-\itemize{
-\item \code{TI} Log marginal likelihood estimate based on thermodynamic integration
-\item \code{TI Corrected} Log marginal likelihood estimate based on modified thermodynamic integration using variance of log likelihood
-\item \code{Harmonic Mean} Log marginal likelihood estimate based on harmonic mean
-\item \code{Steppingstone} Marginal likelihood esimate based on steppingstone estimator. Because of underflow, this will usually not be meaningful.
-\item \code{Log Steppingstone} Log marginal likelihood estimate based on steppingstone estimator.
-\item \code{TI Variance} Estimated variance of \code{TI}
-\item \code{Steppingstone Variance} Estimated variance of \code{Log Steppingstone}
-}
 }
 \examples{
 \dontrun{
