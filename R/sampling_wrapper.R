@@ -29,6 +29,9 @@
 #' * \code{migration.freq} Number of iterations to wait between each migration step
 #' * \code{migration.start} When to start migrating. This should be after chains are burned in.
 #' * \code{migration.end} When to stop migrating. Migration should stop well before sampling is finished.
+#' * \code{randomize_phi} Assume independence between subject and group-level parameters. Useful for improved sampling of group-level parameters.
+#' * \code{zLag} When \code{randomize_phi = TRUE} and \code{method = 'parallel'}, zLag is the number of iterations that can be reached into from the past for the z-Update.
+#' * \code{zStart} When \code{randomize_phi = TRUE} and \code{method = 'parallel'}, zStart is the iteration to begin z-Updating.
 #' @md
 #' @param method A character vector that specifies the type of sampling to be performed and accepts one of the following:
 #' * \code{standard} This options samples from each power posterior along the temperature schedule in sequence
@@ -274,6 +277,20 @@ powder.Model.Hierarchical = function(model,data,num.temps=NULL,alpha=.3,high.tem
 
      if (is.null(de_params$randomize_phi)){
           de_params$randomize_phi = TRUE
+          warning('Assuming independence between group and subject-level parameters. Set de_params$randomize_phi = FALSE to model correlation between group and subject-level parameters.')
+
+          if (is.null(de_params$zLag)) {
+               de_params$zLag = 200
+               warning('Setting de_params$zLag = 200')
+          }
+
+          if(is.null(de_params$zStart)){
+               de_params$zStart = 1500
+               warning('Setting de_params$zStart = 1500. Recommended number of samples is at least 5000 for this value of zStart.')
+               if(de_params$zStart > burnin){
+                    stop('burnin must be greater than de_params$zStart',call.=FALSE)
+               }
+          }
      }
 
      if (is.null(de_params$migration)) {
