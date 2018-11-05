@@ -308,7 +308,7 @@ LBA.Individual = R6::R6Class('Model.Individual',
               N=length(drift) # Number of responses.
               if (N>2) {
                    tmp=array(dim=c(length(t),N-1))
-                   for (i in 2:N) tmp[,i-1]=fptcdf(z=t,x0max=x0max[i],chi=chi[i],
+                   for (i in 2:N) tmp[,i-1]=private$fptcdf(z=t,x0max=x0max[i],chi=chi[i],
                                                    driftrate=drift[i],sddrift=sdI[i])
                    G=apply(1-tmp,1,prod)
               } else {
