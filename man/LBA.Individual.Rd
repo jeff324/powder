@@ -27,7 +27,9 @@ Individual subject Linear Ballistic Accumulator model (Brown & Heathcote, 2008)
 
 \item{\code{prior}}{a list containing priors on all parameters}
 
-\item{\code{contaminant}}{a list specifying two values
+\item{\code{contaminant}}{a list specifying two values}
+
+\item{\code{correct.response}}{is a character or numeric that corresponds to the correct response in data
 \describe{
 \item{\code{pct}}{the percentage (ranging from 0 to 100) of the LBA distribution assumed to be due to random contaminants.}
 \item{\code{contaminant_bound}}{the upper bound of the contaminant distribution.}
