@@ -12,6 +12,11 @@
 #' @param sv inter-trial-variability of drift rate
 #' @param sz inter-trial-variability of starting point
 #' @param prior list containing priors
+#' @param correct.response a character vector. Specifies the value corresponding to the correct response
+#' @param error.response a character vector. Specifies the value corresponding to the error response
+#' @param rt.column a character vector. Specifies the name of the column in the data for response times.
+#' @param response.column a character vector. Specifies the name of the column in the data for respones.
+#' @param condition.column a character vector. Specifies the name of the column in the data for the conditions.
 #' @examples
 #' \dontrun{
 #' # DDM model that varies threshold and drift rate across 3 conditions
@@ -52,6 +57,7 @@
 #' @field theta.start.point a numeric vector containing means of start points used to initialize in theta.init
 #' @field vary.parameter a logical vector containing parameters to vary
 #' @field prior a list containing priors on all parameters
+#' @field correct.response a character vector containing the
 #' @section Methods:
 #' \describe{
 #' \item{\code{log.dens.prior(x,hyper)}}{likelihood of subject-level parameters given group-level parameters}
@@ -74,6 +80,16 @@ DDM.Individual = R6::R6Class('Model.Individual',
          ),
 
          constant = list(),
+
+         correct.response = NULL,
+
+         error.response = NULL,
+
+         rt.column = NULL,
+
+         response.column = NULL,
+
+         condition.column = NULL,
 
          vary.parameter = c(a=FALSE,
                             v=FALSE,
@@ -183,8 +199,20 @@ DDM.Individual = R6::R6Class('Model.Individual',
                         st0=x[paste('st0',cond,sep=".")]
                    }
 
-                   tmp=data$Cond==cond
-                   tmp=rtdists::ddiffusion(rt=data$Time[tmp],response=data$Correct[tmp],
+                   tmp=data[[self$condition.column]]==cond
+
+                   data[[self$response.column]] = as.character(data[[self$response.column]])
+                   if (self$correct.response != 'upper') {
+                        cr = data[[self$response.column]]==self$correct.response
+                        data[[self$response.column]][cr]='upper'
+                   }
+
+                   if (self$error.response != 'lower') {
+                        er = data[[self$response.column]]==self$error.response
+                        data[[self$response.column]][er]='lower'
+                   }
+
+                   tmp=rtdists::ddiffusion(rt=data[[self$rt.column]][tmp],response=data[[self$response.column]][tmp],
                                            a=a,v=v,t0=t0,z=z+.5*a,sz=sz,sv=sv,st0=st0)
 
                    out=out+sum(log(pmax(tmp,1e-10)))
@@ -204,7 +232,8 @@ DDM.Individual = R6::R6Class('Model.Individual',
 
          },
 
-         initialize = function(a=FALSE,v=FALSE,t0=FALSE,z=0,sz=0,sv=0,st0=0,conds=NULL,prior=NULL){
+         initialize = function(a=FALSE,v=FALSE,t0=FALSE,z=0,sz=0,sv=0,st0=0,conds=NULL,prior=NULL,
+                               correct.response=NULL,error.response=NULL,rt.column=NULL,response.column=NULL,condition.column=NULL){
 
               self$vary.parameter['a'] = a
               self$vary.parameter['v'] = v
@@ -213,6 +242,41 @@ DDM.Individual = R6::R6Class('Model.Individual',
               self$vary.parameter['sz'] = sz
               self$vary.parameter['sv'] = sv
               self$vary.parameter['st0'] = st0
+
+              if (is.null(correct.response)) {
+                    self$correct.response = 'upper'
+                    warning('Value for correct response not specified, using \"upper\" as default. If this is not correct, please change in data.',call.=F)
+              } else {
+                    self$correct.response = correct.response
+              }
+
+              if (is.null(error.response)) {
+                   self$error.response = 'lower'
+                   warning('Value for error response not specified, using \"lower\" as default. If this is not correct, please change in data.', call. = F)
+              } else {
+                   self$error.response = error.response
+              }
+
+              if (is.null(rt.column)) {
+                   self$rt.column = 'Time'
+                   warning('Name of RT column not specified, using \"Time\" as default. If this is not correct, please change in data.', call. = F)
+              } else {
+                   self$rt.column = rt.column
+              }
+
+              if (is.null(response.column)) {
+                   self$response.column = 'Correct'
+                   warning('Name of response column not specified, using \"Correct\" as default. If this is not correct, please change in data.', call. = F)
+              } else {
+                   self$response.column = response.column
+              }
+
+              if (is.null(condition.column)) {
+                   self$condition.column = 'Cond'
+                   warning('Name of condition column not specified, using \"Cond\" as default. If this is not correct, please change in data.', call. = F)
+              } else {
+                   self$condition.column = condition.column
+              }
 
               if (as.character(z) == '0') {
                    if(is.null(prior$z)){
