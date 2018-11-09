@@ -12,12 +12,6 @@
 #' @param sv inter-trial-variability of drift rate
 #' @param sz inter-trial-variability of starting point
 #' @param prior list containing priors
-#' @param conds numeric vector containing values corresponding to conditions
-#' @param correct.response a character vector. Specifies the value corresponding to the correct response
-#' @param error.response a character vector. Specifies the value corresponding to the error response
-#' @param rt.column a character vector. Specifies the name of the column in the data for response times.
-#' @param response.column a character vector. Specifies the name of the column in the data for respones.
-#' @param condition.column a character vector. Specifies the name of the column in the data for the conditions.
 #' @examples
 #' \dontrun{
 #' # DDM model that varies threshold and drift rate across 3 conditions
@@ -197,12 +191,7 @@ DDM = R6::R6Class(
                                 sv = 0,
                                 st0 = 0,
                                 conds = NULL,
-                                prior = NULL,
-                                correct.response = NULL,
-                                error.response = NULL,
-                                rt.column = NULL,
-                                response.column = NULL,
-                                condition.column = NULL) {
+                                prior = NULL) {
 
                self$vary.parameter['a'] = a
                self$vary.parameter['v'] = v
@@ -211,42 +200,6 @@ DDM = R6::R6Class(
                self$vary.parameter['sz'] = sz
                self$vary.parameter['sv'] = sv
                self$vary.parameter['st0'] = st0
-
-               if (is.null(correct.response)) {
-                    self$correct.response = 'upper'
-                    warning('Value for correct response not specified, using \"upper\" as default. If this is not correct, please change in data.',call.=F)
-               } else {
-                    self$correct.response = correct.response
-               }
-
-               if (is.null(error.response)) {
-                    self$error.response = 'lower'
-                    warning('Value for error response not specified, using \"lower\" as default. If this is not correct, please change in data.', call. = F)
-               } else {
-                    self$error.response = error.response
-               }
-
-               if (is.null(rt.column)) {
-                    self$rt.column = 'Time'
-                    warning('Name of RT column not specified, using \"Time\" as default. If this is not correct, please change in data.', call. = F)
-               } else {
-                    self$rt.column = rt.column
-               }
-
-               if (is.null(response.column)) {
-                    self$response.column = 'Correct'
-                    warning('Name of response column not specified, using \"Correct\" as default. If this is not correct, please change in data.', call. = F)
-               } else {
-                    self$response.column = response.column
-               }
-
-               if (is.null(condition.column)) {
-                    self$condition.column = 'Cond'
-                    warning('Name of condition column not specified, using \"Cond\" as default. If this is not correct, please change in data.', call. = F)
-               } else {
-                    self$condition.column = condition.column
-               }
-
 
                par_list = list('a'=a,'v'=v,'t0'=t0,'z'=z,'sz'=sz,'sv'=sv,'st0'=st0)
 
