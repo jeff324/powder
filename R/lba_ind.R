@@ -48,11 +48,10 @@ LBA.Individual = R6::R6Class('Model.Individual',
               sve = c(mu=1,sigma=1)
          ),
 
-<<<<<<< HEAD
-=======
+
          correct.response = 1,
 
->>>>>>> parent of 0522a6e... added naming options for data
+
          vary.parameter = c(A=FALSE,
                             b=FALSE,
                             t0=FALSE,
