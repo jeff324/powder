@@ -64,7 +64,7 @@ Sampling from the power posteriors sequentially can be slow, especially for comp
 ```{r,eval=FALSE}
 simple.individual.out.par = powder(model=simple.individual.model,data=individual,
                                num.temps=30,burnin=500,n.samples=1000,method='parallel')
-simple.individual.ml.par = summary(simple.individual.out.par)
+simple.individual.ml.par = marginal.likelihood(simple.individual.out.par)
 print(simple.individual.ml.par)
 
 #                   Method         Value

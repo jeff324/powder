@@ -50,6 +50,9 @@ other power posteriors.}
 \item \code{migration.freq} Number of iterations to wait between each migration step
 \item \code{migration.start} When to start migrating. This should be after chains are burned in.
 \item \code{migration.end} When to stop migrating. Migration should stop well before sampling is finished.
+\item \code{randomize_phi} Assume independence between subject and group-level parameters. Useful for improved sampling of group-level parameters.
+\item \code{zLag} When \code{randomize_phi = TRUE} and \code{method = 'parallel'}, zLag is the number of iterations that can be reached into from the past for the z-Update.
+\item \code{zStart} When \code{randomize_phi = TRUE} and \code{method = 'parallel'}, zStart is the iteration to begin z-Updating.
 }}
 
 \item{method}{A character vector that specifies the type of sampling to be performed and accepts one of the following:

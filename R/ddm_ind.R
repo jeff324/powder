@@ -199,41 +199,22 @@ DDM.Individual = R6::R6Class('Model.Individual',
                         st0=x[paste('st0',cond,sep=".")]
                    }
 
-                   if (is.list(data)) {
-                        tmp=data[[self$condition.column]]==cond
+                   tmp=data[[self$condition.column]]==cond
 
-                        data[[self$response.column]] = as.character(data[[self$response.column]])
-                        if (self$correct.response != 'upper') {
-                             cr = data[[self$response.column]]==self$correct.response
-                             data[[self$response.column]][cr]='upper'
-                        }
-
-                        if (self$error.response != 'lower') {
-                             er = data[[self$response.column]]==self$error.response
-                             data[[self$response.column]][er]='lower'
-                        }
-
-                        tmp=rtdists::ddiffusion(rt=data[[self$rt.column]][tmp],response=data[[self$response.column]][tmp],
-                                                a=a,v=v,t0=t0,z=z+.5*a,sz=sz,sv=sv,st0=st0)
+                   data[[self$response.column]] = as.character(data[[self$response.column]])
+                   if (self$correct.response != 'upper') {
+                        cr = data[[self$response.column]]==self$correct.response
+                        data[[self$response.column]][cr]='upper'
                    }
 
-                   if (is.data.frame(data)) {
-                        tmp=data[,self$condition.column]==cond
-
-                        data[,self$response.column] = as.character(data[,self$response.column])
-                        if (self$correct.response != 'upper') {
-                             cr = data[,self$response.column]==self$correct.response
-                             data[cr,self$response.column]='upper'
-                        }
-
-                        if (self$error.response != 'lower') {
-                             er = data[,self$response.column]==self$error.response
-                             data[er,self$response.column]='lower'
-                        }
-
-                        tmp=rtdists::ddiffusion(rt=data[tmp,self$rt.column],response=data[tmp,self$response.column],
-                                                a=a,v=v,t0=t0,z=z+.5*a,sz=sz,sv=sv,st0=st0)
+                   if (self$error.response != 'lower') {
+                        er = data[[self$response.column]]==self$error.response
+                        data[[self$response.column]][er]='lower'
                    }
+
+                   tmp=rtdists::ddiffusion(rt=data[[self$rt.column]][tmp],response=data[[self$response.column]][tmp],
+                                           a=a,v=v,t0=t0,z=z+.5*a,sz=sz,sv=sv,st0=st0)
+
                    out=out+sum(log(pmax(tmp,1e-10)))
               }
               return(out)
