@@ -219,12 +219,12 @@ parallel.sampling.hierarchical = function(model,data,theta.names,n.pars,temperat
      migration.freq = de_params$migration.freq
      migration.start = de_params$migration.start
      migration.end = de_params$migration.end
-     zStart = de_params$zStart
-     zLag = de_params$zLag
 
      for (i in 1:n.chains) {
           phi[i, ,1] = model$phi.init()
      }
+
+     idx = 2
 
      if(verbose){
           cat('\n')
@@ -246,43 +246,24 @@ parallel.sampling.hierarchical = function(model,data,theta.names,n.pars,temperat
           if(verbose){
                if (i%%update == 0)cat("\n ", i, '/', n.iter, ' ')
           }
-          phi[,,i] = phi[,,i-1]
-
-          if(de_params$randomize_phi){
-               if (i > zStart) {
-                    rand.samp=sample((i-zLag-1):(i-1),1)
-               } else {
-                    rand.samp=i-1
-               }
-          } else {
-               rand.samp = 1:n.chains
-          }
-
+          phi[,,idx] = phi[,,idx-1]
+          rand.samp = sample(1:n.chains,n.chains)
           for (p in theta.names) {
                which.theta = match(x=p, table=theta.names)
                which.phi = grep(paste0('^',p),phi.names)
-               phi[ , ,i] = t(sapply(1:n.chains, crossover_hyper, pars=which.phi, n.chains=n.chains, b=b,
-                                       use.theta=theta[rand.samp, which.theta, ,i-1], use.phi=phi[ , ,i], prior=prior[[p]], model))
+               phi[ , ,idx] = t(sapply(1:n.chains, crossover_hyper, pars=which.phi, n.chains=n.chains, b=b,
+                                       use.theta=theta[rand.samp, which.theta, ,idx-1], use.phi=phi[ , ,idx], prior=prior[[p]], model))
           }
-
-          if(de_params$randomize_phi){
-               if (i > zStart) {
-                    rand.samp=sample((i-zLag):(i),1)
-               } else {
-                    rand.samp=i
-               }
-               hyper = phi[rand.samp, , i]
-          }else{
-               hyper=phi[,,i]
-          }
+          rand.samp = sample(1:n.chains, n.chains)
+          hyper = phi[rand.samp, , idx]
 
           for (j in 1:n.subj) {
-               temp = t(sapply(1:n.chains, crossover_parallel, pars=1:n.pars, n.chains=n.chains, b=b, use.theta=theta[ , ,j,i-1],
-                               use.like=weight[i-1, ,j], data=data[[j]], hyper=hyper,par.names=theta.names,temperatures,model))
-               weight[i, ,j] = temp[ ,1]
-               theta[ , ,j,i] = temp[ ,2:(n.pars+1)]
+               temp = t(sapply(1:n.chains, crossover_parallel, pars=1:n.pars, n.chains=n.chains, b=b, use.theta=theta[ , ,j,idx-1],
+                               use.like=weight[idx-1, ,j], data=data[[j]], hyper=hyper,par.names=theta.names,temperatures,model))
+               weight[idx, ,j] = temp[ ,1]
+               theta[ , ,j,idx] = temp[ ,2:(n.pars+1)]
           }
-
+          idx = idx + 1
      }
 
      return(list(log.like.list=weight,theta=theta,phi=phi))
