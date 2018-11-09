@@ -49,9 +49,6 @@ LBA.Individual = R6::R6Class('Model.Individual',
          ),
 
 
-         correct.response = 1,
-
-
          vary.parameter = c(A=FALSE,
                             b=FALSE,
                             t0=FALSE,
