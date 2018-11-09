@@ -7,7 +7,7 @@ test_that('powder test',{
      data('null',package='powder')
      model = LBA$new()
      out = powder(data=null, model = model, num.temps = 1, n.samples = 1, burnin=1, meltin=1,verbose=F)
-     expect_equal(length(out),5)
+     expect_equal(length(out),4)
      expect_is(out,'Powder.Hierarchical')
      expect_is(out$log.like.list,'list')
      expect_is(out$theta,'array')
@@ -37,86 +37,24 @@ test_that('powder test',{
 
 })
 
-test_that('powder test ddm',{
-     data('null',package='powder')
-     model = DDM$new()
-
-
-     null = lapply(null, function(x){ x$Correct[x$Correct == '1'] = 'upper'
-                              x$Correct[x$Correct == '2'] = 'lower'
-                              return(x)
-                              })
-
-     out = powder(data=null, model = model, num.temps = 1, n.samples = 1, burnin=1, meltin=1,verbose=F)
-     expect_equal(length(out),5)
-     expect_is(out,'Powder.Hierarchical')
-     expect_is(out$log.like.list,'list')
-     expect_is(out$theta,'array')
-     expect_is(out$phi,'array')
-     expect_is(out$options,'list')
-
-     expect_equal(length(out$log.like.list),1)
-     opts = out$options
-     theta_dim = c(opts$n.chains,
-                   opts$n.pars,opts$n.subj,
-                   opts$meltin*length(opts$temperatures) +
-                        opts$burnin + opts$n.samples*length(opts$temperatures))
-     expect_equal(dim(out$theta),theta_dim)
-
-     phi_dim = c(opts$n.chains,opts$n.hpars,opts$meltin*length(opts$temperatures) + opts$burnin +
-                      opts$n.samples*length(opts$temperatures))
-     expect_equal(dim(out$phi),phi_dim)
-
-     out = powder(data=null, model = model, num.temps = 2, n.samples = 1, burnin=1, meltin=1,
-                  n.sequences = 2, current.sequence = 1, verbose=F)
-     expect_equal(length(out$log.like.list),1)
-     expect_equal(out$options$temperatures,0)
-     out = powder(data=null, model = model, num.temps = 2, n.samples = 1, burnin=1, meltin=1,
-                  n.sequences = 2, current.sequence = 1,high.temps.first = TRUE, verbose=F)
-     expect_equal(length(out$log.like.list),1)
-     expect_equal(out$options$temperatures,1)
-
-})
-
 test_that('powder individual', {
      data('null',package='powder')
      dat = null
      model = LBA.Individual$new()
      out = powder(model=model, data=dat[[1]], num.temps=1, n.samples=1, burnin=1, meltin=1, verbose=F)
      expect_is(out,'Powder.Individual')
-     expect_equal(length(out),4)
+     expect_equal(length(out),3)
      expect_is(out$log.like.list,'list')
      expect_is(out$theta,'array')
      expect_is(out$options,'list')
 
      out = powder(model=model, data=dat[[1]], num.temps=2, n.samples=2, burnin=2, meltin=2, verbose=F)
-     expect_equal(length(out),4)
+     expect_equal(length(out),3)
      expect_is(out$log.like.list,'list')
      expect_is(out$theta,'array')
      expect_is(out$options,'list')
 })
 
-
-test_that('powder individual ddm', {
-     data('null',package='powder')
-     dat = null[[1]]
-     dat$Correct = as.character(dat$Correct)
-     dat$Correct[dat$Correct == '1'] = 'upper'
-     dat$Correct[dat$Correct == '2'] = 'lower'
-     model = DDM.Individual$new()
-     out = powder(model=model, data=dat, num.temps=1, n.samples=1, burnin=1, meltin=1, verbose=F)
-     expect_is(out,'Powder.Individual')
-     expect_equal(length(out),4)
-     expect_is(out$log.like.list,'list')
-     expect_is(out$theta,'array')
-     expect_is(out$options,'list')
-
-     out = powder(model=model, data=dat, num.temps=2, n.samples=2, burnin=2, meltin=2, verbose=F)
-     expect_equal(length(out),4)
-     expect_is(out$log.like.list,'list')
-     expect_is(out$theta,'array')
-     expect_is(out$options,'list')
-})
 
 test_that('LBA class expectations',{
      model = LBA$new()
@@ -166,13 +104,21 @@ test_that('marginal likelihood', {
      model = LBA$new()
      data('null')
      out = powder(model=model,data=null,num.temps=3,burnin=5,meltin=5,n.samples=5,verbose=F)
+<<<<<<< HEAD
+     ml = marginal.likelihood(out)
+=======
+
+     data('null',package='powder')
+     model = LBA$new()
+     out = powder(data=null, model = model, num.temps = 1, n.samples = 1, burnin=1, meltin=1,verbose=F)
 
      ml = summary(out)
+>>>>>>> parent of 0522a6e... added naming options for data
      expect_is(ml,'data.frame')
 
      model = LBA.Individual$new()
      data('individual')
      out = powder(model=model,data=individual,num.temps=3,burnin=5,meltin=5,n.samples=5,verbose=F)
-     ml = summary(out)
+     ml = marginal.likelihood(out)
      expect_is(ml,'data.frame')
 })

@@ -8,40 +8,6 @@
 \usage{
 LBA
 }
-\arguments{
-\item{A}{threshold seperation}
-
-\item{b}{threshold}
-
-\item{vc}{correct drift rate}
-
-\item{ve}{error drift rate}
-
-\item{t0}{non-decision time}
-
-\item{sve}{inter-trial-variability of error drift rate. Note that correct drift rate variability is fixed at 1.}
-
-\item{prior}{list containing priors}
-
-\item{conds}{numeric vector containing values corresponding to conditions}
-
-\item{correct.response}{a character vector. Specifies the value corresponding to the correct response}
-
-\item{error.response}{a character vector. Specifies the value corresponding to the error response}
-
-\item{rt.column}{a character vector. Specifies the name of the column in the data for response times.}
-
-\item{response.column}{a character vector. Specifies the name of the column in the data for respones.}
-
-\item{condition.column}{a character vector. Specifies the name of the column in the data for the conditions.}
-
-\item{contaminant}{a list specifying two values
-\describe{
-\item{\code{pct}}{the percentage of the LBA distribution assumed to be due to random contaminants.}
-\item{\code{contaminant_bound}}{the upper bound of the contaminant distribution.}
-The contaminant distribution is assumed to be a uniform spanning from 0 to \code{contaminant_bound}.
-}}
-}
 \value{
 Object of \code{\link{R6Class}} with methods for doing sampling with \code{\link{powder}}
 }

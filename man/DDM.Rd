@@ -24,18 +24,6 @@ DDM
 \item{sz}{inter-trial-variability of starting point}
 
 \item{prior}{list containing priors}
-
-\item{conds}{numeric vector containing values corresponding to conditions}
-
-\item{correct.response}{a character vector. Specifies the value corresponding to the correct response}
-
-\item{error.response}{a character vector. Specifies the value corresponding to the error response}
-
-\item{rt.column}{a character vector. Specifies the name of the column in the data for response times.}
-
-\item{response.column}{a character vector. Specifies the name of the column in the data for respones.}
-
-\item{condition.column}{a character vector. Specifies the name of the column in the data for the conditions.}
 }
 \description{
 Individual subject Drift Diffusion Model (DDM)

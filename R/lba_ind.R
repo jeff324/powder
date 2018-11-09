@@ -6,25 +6,6 @@
 #' @importFrom stats dnorm
 #' @return Object of \code{\link{R6Class}} with methods for doing sampling with \code{\link{powder}}
 #' @format \code{\link{R6Class}} object.
-#' @param A threshold seperation
-#' @param b threshold
-#' @param vc correct drift rate
-#' @param ve error drift rate
-#' @param t0 non-decision time
-#' @param sve inter-trial-variability of error drift rate. Note that correct drift rate variability is fixed at 1.
-#' @param prior list containing priors
-#' @param conds numeric vector containing values corresponding to conditions
-#' @param correct.response a character vector. Specifies the value corresponding to the correct response
-#' @param error.response a character vector. Specifies the value corresponding to the error response
-#' @param rt.column a character vector. Specifies the name of the column in the data for response times.
-#' @param response.column a character vector. Specifies the name of the column in the data for respones.
-#' @param condition.column a character vector. Specifies the name of the column in the data for the conditions.
-#' @param contaminant a list specifying two values
-#' \describe{
-#' \item{\code{pct}}{the percentage of the LBA distribution assumed to be due to random contaminants.}
-#' \item{\code{contaminant_bound}}{the upper bound of the contaminant distribution.}
-#' The contaminant distribution is assumed to be a uniform spanning from 0 to \code{contaminant_bound}.
-#' }
 #' @examples
 #' \dontrun{
 #' #LBA model that varies threshold across 3 conditions
@@ -40,7 +21,6 @@
 #' @field vary.parameter a logical vector containing parameters to vary
 #' @field prior a list containing priors on all parameters
 #' @field contaminant a list specifying two values
-#' @field correct.response is a character or numeric that corresponds to the correct response in data
 #' \describe{
 #' \item{\code{pct}}{the percentage (ranging from 0 to 100) of the LBA distribution assumed to be due to random contaminants.}
 #' \item{\code{contaminant_bound}}{the upper bound of the contaminant distribution.}
@@ -68,15 +48,9 @@ LBA.Individual = R6::R6Class('Model.Individual',
               sve = c(mu=1,sigma=1)
          ),
 
-         correct.response = NULL,
 
-         error.response = NULL,
+         correct.response = 1,
 
-         rt.column = NULL,
-
-         response.column = NULL,
-
-         condition.column = NULL,
 
          vary.parameter = c(A=FALSE,
                             b=FALSE,
@@ -148,9 +122,8 @@ LBA.Individual = R6::R6Class('Model.Individual',
                         s=c(1,x[paste("sve",cond,sep=".")])
                    }
 
-
                    tmp=data$Cond==cond
-                   tmp=private$get.dens.2choice(rt=data$Time[tmp],crct=data$Correct[tmp]==self$correct.response,b=b,A=A,v=vs,s=s,t0=t0)
+                   tmp=private$get.dens.2choice(rt=data$Time[tmp],crct=data$Correct[tmp]==1,b=b,A=A,v=vs,s=s,t0=t0)
 
                    ## density contamination
                    if (self$contaminant$pct > 0) {
@@ -177,55 +150,13 @@ LBA.Individual = R6::R6Class('Model.Individual',
 
          },
 
-        initialize = function(A=F,b=F,vc=F,ve=F,t0=F,sve=F,conds=NULL,prior=NULL,contaminant=list(),
-                              correct.response = NULL,
-                              error.response = NULL,
-                              rt.column = NULL,
-                              response.column = NULL,
-                              condition.column = NULL){
-
+        initialize = function(A=F,b=F,vc=F,ve=F,t0=F,sve=F,conds=NULL,prior=NULL,contaminant=list()){
              self$vary.parameter['A'] = A
              self$vary.parameter['b'] = b
              self$vary.parameter['t0'] = t0
              self$vary.parameter['vc'] = vc
              self$vary.parameter['ve'] = ve
              self$vary.parameter['sve'] = sve
-
-             if (is.null(correct.response)) {
-                  self$correct.response = 1
-                  warning('Value for correct response not specified, using 1 as default. If this is not correct, please change in data.',call.=F)
-             } else {
-                  self$correct.response = correct.response
-             }
-
-             if (is.null(error.response)) {
-                  self$error.response = 2
-                  warning('Value for error response not specified, using 2 as default. If this is not correct, please change in data.', call. = F)
-             } else {
-                  self$error.response = error.response
-             }
-
-             if (is.null(rt.column)) {
-                  self$rt.column = 'Time'
-                  warning('Name of RT column not specified, using \"Time\" as default. If this is not correct, please change in data.', call. = F)
-             } else {
-                  self$rt.column = rt.column
-             }
-
-             if (is.null(response.column)) {
-                  self$response.column = 'Correct'
-                  warning('Name of response column not specified, using \"Correct\" as default. If this is not correct, please change in data.', call. = F)
-             } else {
-                  self$response.column = response.column
-             }
-
-             if (is.null(condition.column)) {
-                  self$condition.column = 'Cond'
-                  warning('Name of condition column not specified, using \"Cond\" as default. If this is not correct, please change in data.', call. = F)
-             } else {
-                  self$condition.column = condition.column
-             }
-
 
              if (length(contaminant)!=0) {
                   if(is.null(contaminant$pct)){
@@ -381,7 +312,7 @@ LBA.Individual = R6::R6Class('Model.Individual',
               N=length(drift) # Number of responses.
               if (N>2) {
                    tmp=array(dim=c(length(t),N-1))
-                   for (i in 2:N) tmp[,i-1]=private$fptcdf(z=t,x0max=x0max[i],chi=chi[i],
+                   for (i in 2:N) tmp[,i-1]=fptcdf(z=t,x0max=x0max[i],chi=chi[i],
                                                    driftrate=drift[i],sddrift=sdI[i])
                    G=apply(1-tmp,1,prod)
               } else {
