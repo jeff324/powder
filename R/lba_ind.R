@@ -21,7 +21,6 @@
 #' @field vary.parameter a logical vector containing parameters to vary
 #' @field prior a list containing priors on all parameters
 #' @field contaminant a list specifying two values
-#' @field correct.response is a character or numeric that corresponds to the correct response in data
 #' \describe{
 #' \item{\code{pct}}{the percentage (ranging from 0 to 100) of the LBA distribution assumed to be due to random contaminants.}
 #' \item{\code{contaminant_bound}}{the upper bound of the contaminant distribution.}
@@ -48,8 +47,6 @@ LBA.Individual = R6::R6Class('Model.Individual',
               ve = c(mu=1,sigma=1),
               sve = c(mu=1,sigma=1)
          ),
-
-         correct.response = 1,
 
          vary.parameter = c(A=FALSE,
                             b=FALSE,
@@ -121,9 +118,8 @@ LBA.Individual = R6::R6Class('Model.Individual',
                         s=c(1,x[paste("sve",cond,sep=".")])
                    }
 
-
                    tmp=data$Cond==cond
-                   tmp=private$get.dens.2choice(rt=data$Time[tmp],crct=data$Correct[tmp]==self$correct.response,b=b,A=A,v=vs,s=s,t0=t0)
+                   tmp=private$get.dens.2choice(rt=data$Time[tmp],crct=data$Correct[tmp]==1,b=b,A=A,v=vs,s=s,t0=t0)
 
                    ## density contamination
                    if (self$contaminant$pct > 0) {

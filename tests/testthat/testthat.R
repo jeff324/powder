@@ -7,7 +7,7 @@ test_that('powder test',{
      data('null',package='powder')
      model = LBA$new()
      out = powder(data=null, model = model, num.temps = 1, n.samples = 1, burnin=1, meltin=1,verbose=F)
-     expect_equal(length(out),5)
+     expect_equal(length(out),4)
      expect_is(out,'Powder.Hierarchical')
      expect_is(out$log.like.list,'list')
      expect_is(out$theta,'array')
@@ -104,17 +104,12 @@ test_that('marginal likelihood', {
      model = LBA$new()
      data('null')
      out = powder(model=model,data=null,num.temps=3,burnin=5,meltin=5,n.samples=5,verbose=F)
-
-     data('null',package='powder')
-     model = LBA$new()
-     out = powder(data=null, model = model, num.temps = 1, n.samples = 1, burnin=1, meltin=1,verbose=F)
-
-     ml = summary(out)
+     ml = marginal.likelihood(out)
      expect_is(ml,'data.frame')
 
      model = LBA.Individual$new()
      data('individual')
      out = powder(model=model,data=individual,num.temps=3,burnin=5,meltin=5,n.samples=5,verbose=F)
-     ml = summary(out)
+     ml = marginal.likelihood(out)
      expect_is(ml,'data.frame')
 })
