@@ -278,7 +278,9 @@ powder.Model.Hierarchical = function(model,data,num.temps=NULL,alpha=.3,high.tem
      if (is.null(de_params$randomize_phi)){
           de_params$randomize_phi = TRUE
           warning('Assuming independence between group and subject-level parameters. Set de_params$randomize_phi = FALSE to model correlation between group and subject-level parameters.')
+     }
 
+     if (method == 'parallel' & de_params$randomize_phi) {
           if (is.null(de_params$zLag)) {
                de_params$zLag = 200
                warning('Setting de_params$zLag = 200')
