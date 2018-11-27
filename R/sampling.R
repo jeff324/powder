@@ -160,7 +160,7 @@ standard.sampling.hierarchical = function(model,data,theta.names,n.pars,temperat
                }
                for (p in theta.names) {
                     which.theta = match(x=p, table=theta.names)
-                    which.phi = grep(paste0('^',p),phi.names)
+                    which.phi = grep(paste0('^',p,'[.]'),phi.names)
                     if (idx %% migration.freq == 0 & idx > migration.start & idx < migration.end) {
                          phi[ , ,idx] = migration.crossover_hyper(pars=which.phi, n.chains=n.chains, use.theta=theta[rand.samp,which.theta,,idx-1],
                                                                   use.phi=phi[ , ,idx], prior=prior[[p]], model)
@@ -260,9 +260,9 @@ parallel.sampling.hierarchical = function(model,data,theta.names,n.pars,temperat
 
           for (p in theta.names) {
                which.theta = match(x=p, table=theta.names)
-               which.phi = grep(paste0('^',p),phi.names)
+               which.phi = grep(paste0('^',p,'[.]'),phi.names)
                phi[ , ,i] = t(sapply(1:n.chains, crossover_hyper, pars=which.phi, n.chains=n.chains, b=b,
-                                       use.theta=theta[rand.samp, which.theta, ,i-1], use.phi=phi[ , ,i], prior=prior[[p]], model))
+                                       use.theta=theta[ ,which.theta, ,rand.samp], use.phi=phi[ , ,i], prior=prior[[p]], model))
           }
 
           if(de_params$randomize_phi){
@@ -271,7 +271,7 @@ parallel.sampling.hierarchical = function(model,data,theta.names,n.pars,temperat
                } else {
                     rand.samp=i
                }
-               hyper = phi[rand.samp, , i]
+               hyper = phi[,,rand.samp]
           }else{
                hyper=phi[,,i]
           }
