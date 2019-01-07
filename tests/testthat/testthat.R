@@ -118,3 +118,7 @@ test_that('marginal likelihood', {
      ml = marginal.likelihood(out)
      expect_is(ml,'data.frame')
 })
+
+test_that('parallel',{
+
+})
