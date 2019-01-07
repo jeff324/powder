@@ -104,16 +104,12 @@ test_that('marginal likelihood', {
      model = LBA$new()
      data('null')
      out = powder(model=model,data=null,num.temps=3,burnin=5,meltin=5,n.samples=5,verbose=F)
-<<<<<<< HEAD
      ml = marginal.likelihood(out)
-=======
-
      data('null',package='powder')
      model = LBA$new()
      out = powder(data=null, model = model, num.temps = 1, n.samples = 1, burnin=1, meltin=1,verbose=F)
 
      ml = summary(out)
->>>>>>> parent of 0522a6e... added naming options for data
      expect_is(ml,'data.frame')
 
      model = LBA.Individual$new()
