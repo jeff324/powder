@@ -120,5 +120,7 @@ test_that('marginal likelihood', {
 })
 
 test_that('parallel',{
-
+     model = LBA$new()
+     data('null')
+     out = powder(model=model,data=null,n.samples=5,verbose=F,method = 'parallel')
 })
