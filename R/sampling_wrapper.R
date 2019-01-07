@@ -276,8 +276,8 @@ powder.Model.Hierarchical = function(model,data,num.temps=NULL,alpha=.3,high.tem
      }
 
      if (is.null(de_params$randomize_phi)){
-          de_params$randomize_phi = FALSE
-          #warning('Assuming independence between group and subject-level parameters. Set de_params$randomize_phi = FALSE to model correlation between group and subject-level parameters.')
+          de_params$randomize_phi = TRUE
+          warning('Assuming independence between group and subject-level parameters. Set de_params$randomize_phi = FALSE to model correlation between group and subject-level parameters.')
      }
 
      if (method == 'parallel' & de_params$randomize_phi) {
@@ -290,8 +290,7 @@ powder.Model.Hierarchical = function(model,data,num.temps=NULL,alpha=.3,high.tem
                de_params$zStart = 1500
                warning('Setting de_params$zStart = 1500. Recommended number of samples is at least 5000 for this value of zStart.')
                if(de_params$zStart > burnin){
-                    warning('burnin must be greater than de_params$zStart. Setting burnin to 2*de_params$zStart',call.=FALSE)
-                    burnin = 2*de_params$zStart
+                    stop('burnin must be greater than de_params$zStart',call.=FALSE)
                }
           }
      }
