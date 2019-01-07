@@ -255,8 +255,9 @@ parallel.sampling.hierarchical = function(model,data,theta.names,n.pars,temperat
                     rand.samp=i-1
                }
           } else {
-               rand.samp = 1:n.chains
+               rand.samp = i-1
           }
+
 
           for (p in theta.names) {
                which.theta = match(x=p, table=theta.names)
