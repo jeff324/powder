@@ -281,13 +281,21 @@ powder.Model.Hierarchical = function(model,data,num.temps=30,alpha=.3,high.temps
                warning('No zLag value supplied. Setting de_params$zLag = 200',call.=FALSE,immediate.=TRUE)
           }
 
-          if(is.null(de_params$zStart)){
+          if (is.null(de_params$zStart)) {
                de_params$zStart = 1500
                warning('No zStart value supplied. Setting de_params$zStart = 1500.',call.=FALSE,immediate.=TRUE)
-               if(de_params$zStart > burnin){
+               if (de_params$zStart > burnin) {
                     warning('burnin must be greater than de_params$zStart. Setting burnin to 2*zStart.',call.=FALSE,immediate.=TRUE)
                     burnin = de_params$zStart * 2
                }
+          }
+
+          if (de_params$zStart < de_params$zLag) {
+               stop('zStart must be > zLag',call.=FALSE)
+          }
+
+          if (de_params$zStart > (burnin + n.samples)) {
+               stop('zStart must be < burnin + n.samples',call.=FALSE)
           }
      }
 
