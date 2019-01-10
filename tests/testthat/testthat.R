@@ -129,9 +129,16 @@ test_that('parallel',{
      ml = summary(out)
      expect_is(ml,'data.frame')
 
+     out = powder(model=model,data=null,n.samples=5,burnin=1,verbose=F,method = 'parallel',
+                  de_params=list(randomize_phi=TRUE,zStart=3,zLag=2))
+     ml = summary(out)
+     expect_is(ml,'data.frame')
+
      model = LBA.Individual$new()
      data('individual')
      out = powder(model=model,data=individual,n.samples=5,burnin=1,verbose=F,method = 'parallel')
      ml = summary(out)
      expect_is(ml,'data.frame')
+
+
 })
