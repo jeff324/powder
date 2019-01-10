@@ -2,12 +2,27 @@ library(testthat)
 library(powder)
 context('powder')
 
+test_that('individual posterior', {
+     data('null',package='powder')
+     dat = null
+     model = LBA.Individual$new()
+     out = powder(model=model, data=dat[[1]], num.temps=1, n.samples=1, burnin=1, meltin=1, verbose=F)
+     expect_is(out,'Powder.Individual')
+     expect_equal(length(out),4)
+     expect_is(out$log.like.list,'list')
+     expect_is(out$theta,'array')
+     expect_is(out$options,'list')
+     summ = summary(out)
+     expect_is(summ,'data.frame')
+})
 
-test_that('powder test',{
+test_that('hierarchical posterior',{
+
+     #test posterior sampling
      data('null',package='powder')
      model = LBA$new()
      out = powder(data=null, model = model, num.temps = 1, n.samples = 1, burnin=1, meltin=1,verbose=F)
-     expect_equal(length(out),4)
+     expect_equal(length(out),5)
      expect_is(out,'Powder.Hierarchical')
      expect_is(out$log.like.list,'list')
      expect_is(out$theta,'array')
@@ -26,6 +41,30 @@ test_that('powder test',{
             opts$n.samples*length(opts$temperatures))
      expect_equal(dim(out$phi),phi_dim)
 
+     summ = summary(out)
+     expect_is(summ,'list')
+
+})
+
+test_that('marginal likelihood', {
+     #hierarchical marginal likelihood
+     model = LBA$new()
+     data('null')
+     out = powder(model=model,data=null,num.temps=3,burnin=5,meltin=5,n.samples=5,verbose=F)
+     ml = summary(out)
+     expect_is(ml,'data.frame')
+
+     #individual marginal likelihood
+     model = LBA.Individual$new()
+     data('individual')
+     out = powder(model=model,data=individual,num.temps=3,burnin=5,meltin=5,n.samples=5,verbose=F)
+     ml = summary(out)
+     expect_is(ml,'data.frame')
+})
+
+test_that('multi core', {
+     data('null',package='powder')
+     model = LBA$new()
      out = powder(data=null, model = model, num.temps = 2, n.samples = 1, burnin=1, meltin=1,
                   n.sequences = 2, current.sequence = 1, verbose=F)
      expect_equal(length(out$log.like.list),1)
@@ -34,25 +73,6 @@ test_that('powder test',{
                   n.sequences = 2, current.sequence = 1,high.temps.first = TRUE, verbose=F)
      expect_equal(length(out$log.like.list),1)
      expect_equal(out$options$temperatures,1)
-
-})
-
-test_that('powder individual', {
-     data('null',package='powder')
-     dat = null
-     model = LBA.Individual$new()
-     out = powder(model=model, data=dat[[1]], num.temps=1, n.samples=1, burnin=1, meltin=1, verbose=F)
-     expect_is(out,'Powder.Individual')
-     expect_equal(length(out),3)
-     expect_is(out$log.like.list,'list')
-     expect_is(out$theta,'array')
-     expect_is(out$options,'list')
-
-     out = powder(model=model, data=dat[[1]], num.temps=2, n.samples=2, burnin=2, meltin=2, verbose=F)
-     expect_equal(length(out),3)
-     expect_is(out$log.like.list,'list')
-     expect_is(out$theta,'array')
-     expect_is(out$options,'list')
 })
 
 
@@ -100,29 +120,18 @@ test_that('LBA name collision',{
      expect_false(any(which.phi.len != 2))
 })
 
-test_that('marginal likelihood', {
-     model = LBA$new()
-     data('null')
-     out = powder(model=model,data=null,num.temps=3,burnin=5,meltin=5,n.samples=5,verbose=F)
-     ml = summary(out)
-     data('null',package='powder')
-     model = LBA$new()
-     out = powder(data=null, model = model, num.temps = 1, n.samples = 1, burnin=1, meltin=1,verbose=F)
 
-     ml = summary(out)
-     expect_is(ml,'data.frame')
-
-     model = LBA.Individual$new()
-     data('individual')
-     out = powder(model=model,data=individual,num.temps=3,burnin=5,meltin=5,n.samples=5,verbose=F)
-     ml = summary(out)
-     expect_is(ml,'data.frame')
-})
 
 test_that('parallel',{
      model = LBA$new()
      data('null')
      out = powder(model=model,data=null,n.samples=5,burnin=1,verbose=F,method = 'parallel')
+     ml = summary(out)
+     expect_is(ml,'data.frame')
+
+     model = LBA.Individual$new()
+     data('individual')
+     out = powder(model=model,data=individual,n.samples=5,burnin=1,verbose=F,method = 'parallel')
      ml = summary(out)
      expect_is(ml,'data.frame')
 })
