@@ -57,12 +57,12 @@
 #' print(est)
 #' }
 #' @export
-powder <- function(model,data,num.temps=NULL,alpha=.3,high.temps.first=FALSE,n.sequences=1,current.sequence=1,
+powder <- function(model,data,num.temps=30,alpha=.3,high.temps.first=FALSE,n.sequences=1,current.sequence=1,
                    n.samples=1000,n.chains=NULL,burnin=500,meltin=250,de_params=list(),method='standard',
                    return.samples=TRUE,verbose=TRUE,update=100) UseMethod("powder")
 
 #' @export
-powder.Model.Individual = function(model,data,num.temps=NULL,alpha=.3,high.temps.first=FALSE,n.sequences=1,current.sequence=1,
+powder.Model.Individual = function(model,data,num.temps=30,alpha=.3,high.temps.first=FALSE,n.sequences=1,current.sequence=1,
                                    n.samples=1000,n.chains=NULL,burnin=500,meltin=250,de_params=list(),method='standard',
                                    return.samples=TRUE,verbose=TRUE,update=100){
 
@@ -73,10 +73,6 @@ powder.Model.Individual = function(model,data,num.temps=NULL,alpha=.3,high.temps
 
      if (is.null(de_params$b)) {
           de_params$b = .001
-     }
-
-     if (is.null(num.temps)) {
-          num.temps = 30
      }
 
      if (method != 'posterior') {
@@ -190,7 +186,7 @@ powder.Model.Individual = function(model,data,num.temps=NULL,alpha=.3,high.temps
 }
 
 #' @export
-powder.Model.Hierarchical = function(model,data,num.temps=NULL,alpha=.3,high.temps.first=FALSE,n.sequences=1,current.sequence=1,
+powder.Model.Hierarchical = function(model,data,num.temps=30,alpha=.3,high.temps.first=FALSE,n.sequences=1,current.sequence=1,
                   n.samples=1000,n.chains=NULL,burnin=500,meltin=250,
                   de_params=list(),method='standard',return.samples=TRUE,verbose=TRUE,update=10){
 
@@ -199,10 +195,6 @@ powder.Model.Hierarchical = function(model,data,num.temps=NULL,alpha=.3,high.tem
 
      if (is.null(de_params$b)) {
           de_params$b = .001
-     }
-
-     if (is.null(num.temps)) {
-          num.temps = 30
      }
 
      if (method != 'posterior') {
@@ -276,8 +268,7 @@ powder.Model.Hierarchical = function(model,data,num.temps=NULL,alpha=.3,high.tem
      }
 
      if (is.null(de_params$randomize_phi)){
-          de_params$randomize_phi = TRUE
-          warning('Assuming independence between group and subject-level parameters. Set de_params$randomize_phi = FALSE to model correlation between group and subject-level parameters.',call.=FALSE,immediate.=TRUE)
+          de_params$randomize_phi = FALSE
      }
 
      if (method == 'parallel' & de_params$randomize_phi) {
