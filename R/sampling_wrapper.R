@@ -214,10 +214,12 @@ powder.Model.Hierarchical = function(model,data,num.temps=30,alpha=.3,high.temps
           temperatures = 1
           meltin = 0
           message = 'Sampling posterior'
+          method = 'posterior'
      }
 
      if (num.temps == 1) {
           temperatures = 1 #default to posterior sampling
+          method = 'posterior'
      }
 
 
