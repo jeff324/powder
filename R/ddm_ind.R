@@ -15,6 +15,8 @@
 #' @examples
 #' \dontrun{
 #' # DDM model that varies threshold and drift rate across 3 conditions
+#' # Responses of "1" correspond to the lower response boundary and
+#' # resonses of "2" correspond to the upper response boundary.
 #' model = DDM.Individual$new(a=T,v=T,conds=1:3)
 #'
 #' # Note, inter-trial-variability components, st0, sv, and sz
