@@ -34,11 +34,12 @@
 #' * \code{zStart} When \code{randomize_phi = TRUE} and \code{method = 'parallel'}, zStart is the iteration to begin z-Updating.
 #' @md
 #' @param method A character vector that specifies the type of sampling to be performed and accepts one of the following:
-#' * \code{standard} This options samples from each power posterior along the temperature schedule in sequence
-#' * \code{parallel} This options samples from each power posterior in parallel, where the target density of each chain is
+#' * \code{standard} This option samples from each power posterior along the temperature schedule in sequence
+#' * \code{parallel} This option samples from each power posterior in parallel, where the target density of each chain is
 #' a power posterior at a given temperature. Using this method will cause n.chains to default to num.temps.
-#' * \code{sample.posterior} This options samples from the posterior (i.e. the power posterior where temperature = 1).
+#' * \code{sample.posterior} This option samples from the posterior (i.e. the power posterior where temperature = 1).
 #' Although this option is useful for parameter estimation, it is not possible to obtain marginal likelihoods via this option.
+#' * \code{wbic} This option option samples from a single power posterior, where the temperature = 1/log(n) (Watanabe, 2013).
 #' @param return.samples If true, return subject and group-level samples.
 #' Otherwise, return only the log likelihoods from each power posterior.
 #' @param verbose Display progress
@@ -75,30 +76,57 @@ powder.Model.Individual = function(model,data,num.temps=30,alpha=.3,high.temps.f
           de_params$b = .001
      }
 
-     if (method != 'posterior') {
+     if (method == 'standard') {
           temperatures = get_temperatures(num.temps,
                                           alpha,
                                           high.temps.first,
                                           n.sequences,
                                           current.sequence)
 
-          if (method == 'standard') {
-               message = 'Sampling power posterior @ temperature'
-          } else {
-               message = paste('Sampling', length(temperatures),'power posteriors in parallel')
-               metlin = 0
+          message = 'Sampling power posterior @ temperature'
+
+          if (num.temps == 1) {
+               temperatures = 1
+               method = 'posterior'
+               warn_msg1 = 'Number of temperatures must be > 1 for standard sampling. Defaulting to posterior sampling.'
+               warn_msg2 =  'If marginal likelihoods are desired for a single temperature set method to \'wbic\'.'
+               warning(paste(warn_msg1,warn_msg2), call. = FALSE, immediate. = TRUE)
           }
-     } else {
+
+     }
+
+     if (method == 'parallel') {
+          temperatures = get_temperatures(num.temps,
+                                          alpha,
+                                          high.temps.first,
+                                          n.sequences,
+                                          current.sequence)
+
+          message = paste('Sampling', length(temperatures),'power posteriors in parallel')
+          metlin = 0
+
+          if (num.temps == 1) {
+               temperatures = 1
+               method = 'posterior'
+               warn_msg1 = 'Number of temperatures must be > 1 for parallel sampling. Defaulting to posterior sampling.'
+               warn_msg2 =  'If marginal likelihoods are desired for a single temperature set method to \'wbic\'.'
+               warning(paste(warn_msg1,warn_msg2), call. = FALSE, immediate. = TRUE)
+          }
+     }
+
+
+     if (method == 'posterior') {
           temperatures = 1
           meltin = 0
           message = 'Sampling posterior'
-          method = 'posterior'
      }
 
-     if (num.temps == 1) {
-          temperatures = 1 #default to posterior sampling
-          method = 'posterior'
+     if (method == 'wbic') {
+          temperatures = 1/log(length(data[[1]]))
+          meltin = 0
+          message = 'Sampling power posterior @ temperature'
      }
+
 
 
      if (is.null(n.chains)) {
@@ -118,7 +146,7 @@ powder.Model.Individual = function(model,data,num.temps=30,alpha=.3,high.temps.f
           }
      }
 
-     if( !(method == 'parallel' |  method == 'posterior' |  method == 'standard')){
+     if( !(method == 'parallel' |  method == 'posterior' |  method == 'standard' | method == 'wbic')){
           stop(paste('method', method, 'not found. Select \'parallel\', \'standard\', or \'posterior\''),
                call.=FALSE)
      }
@@ -151,7 +179,7 @@ powder.Model.Individual = function(model,data,num.temps=30,alpha=.3,high.temps.f
           stop('Expected data[[1]] to be a vector not a list',call. = FALSE)
      }
 
-     if (method == 'standard' | method == 'posterior') {
+     if (method == 'standard' | method == 'posterior' | method == 'wbic') {
           samples = standard.sampling.individual(model,data,theta.names,n.pars,temperatures,de_params,
                                                  burnin,meltin,n.samples,n.chains,method,message,
                                                  return.samples,verbose,update)
@@ -199,29 +227,55 @@ powder.Model.Hierarchical = function(model,data,num.temps=30,alpha=.3,high.temps
           de_params$b = .001
      }
 
-     if (method != 'posterior') {
+     if (method == 'standard') {
           temperatures = get_temperatures(num.temps,
                                           alpha,
                                           high.temps.first,
                                           n.sequences,
                                           current.sequence)
 
-          if (method == 'standard') {
-               message = 'Sampling power posterior @ temperature'
-          } else {
-               message = paste('Sampling', length(temperatures),'power posteriors in parallel')
-               metlin = 0
+          message = 'Sampling power posterior @ temperature'
+
+          if (num.temps == 1) {
+               temperatures = 1
+               method = 'posterior'
+               warn_msg1 = 'Number of temperatures must be > 1 for standard sampling. Defaulting to posterior sampling.'
+               warn_msg2 =  'If marginal likelihoods are desired for a single temperature set method to \'wbic\'.'
+               warning(paste(warn_msg1,warn_msg2), call. = FALSE, immediate. = TRUE)
           }
-     } else {
+
+     }
+
+     if (method == 'parallel') {
+          temperatures = get_temperatures(num.temps,
+                                          alpha,
+                                          high.temps.first,
+                                          n.sequences,
+                                          current.sequence)
+
+          message = paste('Sampling', length(temperatures),'power posteriors in parallel')
+          metlin = 0
+
+          if (num.temps == 1) {
+               temperatures = 1
+               method = 'posterior'
+               warn_msg1 = 'Number of temperatures must be > 1 for parallel sampling. Defaulting to posterior sampling.'
+               warn_msg2 =  'If marginal likelihoods are desired for a single temperature set method to \'wbic\'.'
+               warning(paste(warn_msg1,warn_msg2), call. = FALSE, immediate. = TRUE)
+          }
+     }
+
+
+     if (method == 'posterior') {
           temperatures = 1
           meltin = 0
           message = 'Sampling posterior'
-          method = 'posterior'
      }
 
-     if (num.temps == 1) {
-          temperatures = 1 #default to posterior sampling
-          method = 'posterior'
+     if (method == 'wbic') {
+          temperatures = 1/log(sum(sapply(data,function(x) length(x[[1]]))))
+          meltin = 0
+          message = 'Sampling power posterior @ temperature'
      }
 
 
@@ -242,7 +296,7 @@ powder.Model.Hierarchical = function(model,data,num.temps=30,alpha=.3,high.temps
           }
      }
 
-     if( !(method == 'parallel' |  method == 'posterior' |  method == 'standard')){
+     if( !(method == 'parallel' |  method == 'posterior' |  method == 'standard' | method == 'wbic')){
           stop(paste('method', method, 'not found. Select \'parallel\', \'standard\', or \'posterior\''),
                call.=FALSE)
      }
@@ -322,7 +376,7 @@ powder.Model.Hierarchical = function(model,data,num.temps=30,alpha=.3,high.temps
           }
      }
 
-     if (method == 'standard' | method == 'posterior') {
+     if (method == 'standard' | method == 'posterior' | method == 'wbic') {
           samples = standard.sampling.hierarchical(model,data,theta.names,n.pars,temperatures,de_params,
                                                    burnin,meltin,n.samples,n.chains,method,message,
                                                    return.samples,verbose,update)

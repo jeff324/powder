@@ -46,6 +46,7 @@ test_that('hierarchical posterior',{
 
 })
 
+
 test_that('marginal likelihood', {
      #hierarchical marginal likelihood
      model = LBA$new()
@@ -58,6 +59,23 @@ test_that('marginal likelihood', {
      model = LBA.Individual$new()
      data('individual')
      out = powder(model=model,data=individual,num.temps=3,burnin=5,meltin=5,n.samples=5,verbose=F)
+     ml = summary(out)
+     expect_is(ml,'data.frame')
+})
+
+
+test_that('wbic', {
+     #hierarchical marginal likelihood
+     model = LBA$new()
+     data('null')
+     out = powder(model=model,data=null,burnin=5,n.samples=5,verbose=F,method='wbic')
+     ml = summary(out)
+     expect_is(ml,'data.frame')
+
+     #individual marginal likelihood
+     model = LBA.Individual$new()
+     data('individual')
+     out = powder(model=model,data=individual,burnin=5,n.samples=5,verbose=F,method='wbic')
      ml = summary(out)
      expect_is(ml,'data.frame')
 })

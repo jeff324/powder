@@ -124,6 +124,7 @@ summary.Powder.Hierarchical = function(object,options=list(), ...){
      }
 
      if(pow.out$options$method == 'parallel'){
+
           prob_list = sapply(1:n.chains,function(c) apply(prob_list[,c,],1,sum))
           prob_list = lapply(1:n.chains,function(x) prob_list[burnin:nrow(prob_list),x])
           prob_list = lapply(1:n.chains,function(x)prob_list[[x]][!is.na(prob_list[[x]])])
@@ -134,6 +135,13 @@ summary.Powder.Hierarchical = function(object,options=list(), ...){
           }
 
           df = tibble::as.tibble(get_estimates(prob_list,temperatures))
+     }
+
+     if (pow.out$options$method == 'wbic') {
+          prob_list = prob_list[[1]]
+          prob_list = sapply(1:n.chains,function(c) apply(prob_list[,c,],1,sum))
+          prob_list = prob_list[burnin:nrow(prob_list),]
+          df = data.frame('wbic' = mean(prob_list), 'SE' = sd(prob_list) / sqrt(length(prob_list)))
      }
 
      return(df)
@@ -235,12 +243,22 @@ summary.Powder.Individual = function(object,options=list(), ...){
      }
 
      if (pow.out$options$method == 'parallel') {
+
           prob_list = lapply(1:ncol(prob_list),function(x) prob_list[burnin:nrow(prob_list),x])
           if (pow.out$options$high.temps.first) {
                prob_list = rev(prob_list)
                temperatures = rev(temperatures)
           }
+
           df = tibble::as.tibble(get_estimates(prob_list,temperatures))
+     }
+
+     if (pow.out$options$method == 'wbic') {
+
+          prob_list = prob_list[[1]]
+          prob_list = prob_list[burnin:nrow(prob_list),]
+          df = data.frame('wbic' = mean(prob_list), 'SE' = sd(prob_list) / sqrt(length(prob_list)))
+
      }
 
      return(df)

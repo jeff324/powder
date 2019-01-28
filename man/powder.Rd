@@ -4,11 +4,11 @@
 \alias{powder}
 \title{Power posterior sampling using differential evolution}
 \usage{
-powder(model, data, num.temps = NULL, alpha = 0.3,
-  high.temps.first = FALSE, n.sequences = 1, current.sequence = 1,
-  n.samples = 1000, n.chains = NULL, burnin = 500, meltin = 250,
-  de_params = list(), method = "standard", return.samples = TRUE,
-  verbose = TRUE, update = 100)
+powder(model, data, num.temps = 30, alpha = 0.3, high.temps.first = FALSE,
+  n.sequences = 1, current.sequence = 1, n.samples = 1000,
+  n.chains = NULL, burnin = 500, meltin = 250, de_params = list(),
+  method = "standard", return.samples = TRUE, verbose = TRUE,
+  update = 100)
 }
 \arguments{
 \item{model}{See \code{\link{LBA}} for more information and an example.}
@@ -57,11 +57,12 @@ other power posteriors.}
 
 \item{method}{A character vector that specifies the type of sampling to be performed and accepts one of the following:
 \itemize{
-\item \code{standard} This options samples from each power posterior along the temperature schedule in sequence
-\item \code{parallel} This options samples from each power posterior in parallel, where the target density of each chain is
+\item \code{standard} This option samples from each power posterior along the temperature schedule in sequence
+\item \code{parallel} This option samples from each power posterior in parallel, where the target density of each chain is
 a power posterior at a given temperature. Using this method will cause n.chains to default to num.temps.
-\item \code{sample.posterior} This options samples from the posterior (i.e. the power posterior where temperature = 1).
+\item \code{sample.posterior} This option samples from the posterior (i.e. the power posterior where temperature = 1).
 Although this option is useful for parameter estimation, it is not possible to obtain marginal likelihoods via this option.
+\item \code{wbic} This option option samples from a single power posterior, where the temperature = 1/log(n) (Watanabe, 2013).
 }}
 
 \item{return.samples}{If true, return subject and group-level samples.

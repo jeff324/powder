@@ -21,19 +21,24 @@ standard.sampling.individual = function(model,data,theta.names,n.pars,temperatur
           }
           if (t==1) {
                n.iter = burnin + n.samples
+          } else {
+               n.iter = meltin + n.samples
+          }
+          log.like = array(NA,c(n.iter, n.chains))
+          if (t==1) {
                for (i in 1:n.chains) {
                     while (weight[1, i]==-Inf) {
                          theta[i, ,1] = model$theta.init()
                          weight[1, i] = model$log.dens.like(theta[i, ,1],data=data,par.names=theta.names)
+                         log.like[1, i] = weight[1, i]
                     }
                }
           }else{
-               n.iter = meltin + n.samples
                log.like[1, ] = sapply(1:n.chains, function(x) model$log.dens.like(theta[x, ,idx-1], data=data, par.names=theta.names))
                weight[idx-1, ] = log.like[1, ]
           }
 
-          log.like = array(NA,c(n.iter, n.chains))
+
           for (i in 2:n.iter) {
                if(verbose){
                     if (i%%update==0)cat("\n ",i,'/',n.iter)
@@ -138,9 +143,11 @@ standard.sampling.hierarchical = function(model,data,theta.names,n.pars,temperat
                          while (weight[1,i,j]==-Inf) {
                               theta[i, ,j,1] = model$theta.init()
                               weight[1,i,j] = model$log.dens.like(theta[i, ,j,1],data=data[[j]],par.names=theta.names)
+                              log_like[1,i,j] = weight[1,i,j]
                          }
                     }
                }
+
           } else {
                for (j in 1:n.subj) {
                     log_like[1, ,j] = sapply(1:n.chains,function(x)model$log.dens.like(theta[x, ,j,idx-1],data=data[[j]],par.names=theta.names))
