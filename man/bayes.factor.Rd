@@ -2,7 +2,7 @@
 % Please edit documentation in R/utility.R
 \name{bayes.factor}
 \alias{bayes.factor}
-\title{Compute Bayes factor from powder objects}
+\title{TODO: Compute Bayes factor from powder objects NOT IMPLEMENTED}
 \usage{
 bayes.factor(m1, m2, log = TRUE)
 }

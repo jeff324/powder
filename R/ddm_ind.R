@@ -15,6 +15,8 @@
 #' @examples
 #' \dontrun{
 #' # DDM model that varies threshold and drift rate across 3 conditions
+#' # Responses of "1" correspond to the lower response boundary and
+#' # resonses of "2" correspond to the upper response boundary.
 #' model = DDM.Individual$new(a=T,v=T,conds=1:3)
 #'
 #' # Note, inter-trial-variability components, st0, sv, and sz
@@ -96,13 +98,14 @@ DDM.Individual = R6::R6Class('Model.Individual',
          log.dens.prior=function(x,hyper){
               out=0
               v_idx = grep('^v',names(x))
-              trunc_norm_pars = names(x)[-v_idx]
+              z_idx = grep('^z',names(x))
+              trunc_norm_pars = names(x)[-c(v_idx,z_idx)]
 
               for (p in trunc_norm_pars) {
                    out = msm::dtnorm(x[p],hyper[[p]][1],hyper[[p]][2],0,Inf,log=TRUE) + out
               }
 
-              norm_pars = names(x)[v_idx]
+              norm_pars = names(x)[c(v_idx,z_idx)]
 
               for (p in norm_pars){
                    out = dnorm(x[p],hyper[[p]][1],hyper[[p]][2],log=TRUE) + out
@@ -127,9 +130,9 @@ DDM.Individual = R6::R6Class('Model.Individual',
 
               if (!self$vary.parameter['z']) {
                    if(is.null(self$constant$z)){
-                        z=x['z']
+                        z=pnorm(x['z'])
                    }else{
-                        z=self$constant$z
+                        z=.5
                    }
               }
 
@@ -171,7 +174,7 @@ DDM.Individual = R6::R6Class('Model.Individual',
                         t0=x[paste('t0',cond,sep=".")]
                    }
                    if (self$vary.parameter['z']) {
-                        z=x[paste('z',cond,sep=".")]
+                        z=pnorm(x[paste('z',cond,sep=".")])
                    }
                    if (self$vary.parameter['sz']) {
                         sz=x[paste('sz',cond,sep=".")]
@@ -183,10 +186,16 @@ DDM.Individual = R6::R6Class('Model.Individual',
                         st0=x[paste('st0',cond,sep=".")]
                    }
 
-                   tmp=data$Cond==cond
-                   tmp=rtdists::ddiffusion(rt=data$Time[tmp],response=data$Correct[tmp],
-                                           a=a,v=v,t0=t0,z=z+.5*a,sz=sz,sv=sv,st0=st0)
-
+                   #if z is constant use correct and incorrect bounds, otherwise use response bounds
+                   if (!is.null(self$constant$z)) {
+                        tmp=rtdists::ddiffusion(rt=data$Time[data$Cond==cond],
+                                                response=data$Correct[data$Cond==cond],
+                                                a=a,v=v,t0=t0,z=z*a,sz=sz,sv=sv,st0=st0)
+                   } else {
+                        tmp=rtdists::ddiffusion(rt=data$Time[data$Cond==cond],
+                                                response=data$Response[data$Cond==cond],
+                                                a=a,v=v,t0=t0,z=z*a,sz=sz,sv=sv,st0=st0)
+                   }
                    out=out+sum(log(pmax(tmp,1e-10)))
               }
               return(out)
@@ -204,7 +213,7 @@ DDM.Individual = R6::R6Class('Model.Individual',
 
          },
 
-         initialize = function(a=FALSE,v=FALSE,t0=FALSE,z=0,sz=0,sv=0,st0=0,conds=NULL,prior=NULL){
+         initialize = function(a=FALSE,v=FALSE,t0=FALSE,z=0.5,sz=0,sv=0,st0=0,conds=NULL,prior=NULL){
 
               self$vary.parameter['a'] = a
               self$vary.parameter['v'] = v
@@ -214,10 +223,10 @@ DDM.Individual = R6::R6Class('Model.Individual',
               self$vary.parameter['sv'] = sv
               self$vary.parameter['st0'] = st0
 
-              if (as.character(z) == '0') {
+              if (is.numeric(z)) {
                    if(is.null(prior$z)){
                         self$prior[['z']] = 0
-                        self$constant$z = 0
+                        self$constant$z = z
                    }else{
                         if (length(prior$z) == 1 & prior$z[1] == 0) {
                              self$prior[['z']] = 0
@@ -226,6 +235,9 @@ DDM.Individual = R6::R6Class('Model.Individual',
                    }
               }
 
+              if (is.logical(z)) {
+                   warning('Using data$Response as response boundaries, upper = 2, lower = 1', immediate. = TRUE, call. = FALSE)
+              }
 
               if (as.character(sz) == '0') {
                    if(is.null(prior$sz)){
@@ -320,7 +332,7 @@ DDM.Individual = R6::R6Class('Model.Individual',
                                        a = x[y,'a'],
                                        v = x[y,'v'],
                                        t0 = x[y,'t0'],
-                                       z = x[y,'z'] + .5*x[y,'a'],
+                                       z = pnorm(x[y,'z'])*x[y,'a'],
                                        sz = x[y,'sz'],
                                        sv = x[y,'sv'],
                                        st0 = x[y,'st0']),
