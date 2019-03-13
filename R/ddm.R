@@ -107,7 +107,7 @@ DDM = R6::R6Class(
                a = c(mu = 1, sd = 1),
                v = c(mu = 1, sd = 1),
                t0 = c(mu = .3, sd = .3),
-               z = c(mu = 5, sd = .5),
+               z = c(mu = .5, sd = .5),
                sz = c(mu = .2, sd = .2),
                sv = c(mu = .1, sd = .1),
                st0 = c(mu = .1, sd = .1)
@@ -129,7 +129,8 @@ DDM = R6::R6Class(
           log.dens.prior = function(x, hyper) {
                out = 0
                v_idx = grep('^v', names(x))
-               trunc_norm_pars = names(x)[-v_idx]
+               z_idx = grep('^z', names(x))
+               trunc_norm_pars = names(x)[-c(v_idx,z_idx)]
 
                for (p in trunc_norm_pars) {
                     out =  msm::dtnorm(x[p], hyper[paste(p, "mu", sep = ".")],
@@ -137,7 +138,7 @@ DDM = R6::R6Class(
                                        0, Inf, log = TRUE) + out
                }
 
-               norm_pars = names(x)[v_idx]
+               norm_pars = names(x)[c(v_idx,z_idx)]
 
                for (p in norm_pars) {
                     out =  dnorm(x[p], hyper[paste(p, "mu", sep = ".")],
@@ -148,7 +149,7 @@ DDM = R6::R6Class(
           },
 
           log.dens.hyper = function(theta, phi, prior) {
-               if (length(grep('^v', names(phi))) > 0) {
+               if (length(grep('^v', names(phi))) > 0 | length(grep('^z', names(phi))) > 0) {
                     sum((dnorm(theta, phi[1], phi[2], log = TRUE))) +
                          (dnorm(phi[1], prior$mu[1], prior$mu[2], log = TRUE)) +
                          (dnorm(phi[2], prior$mu[1], prior$sigma[2], log = TRUE))
@@ -205,7 +206,7 @@ DDM = R6::R6Class(
 
                for(i in 1:length(par_list)){
                     par_name = names(par_list)[i]
-                    if (as.character(par_list[[i]]) == '0') {
+                    if (is.numeric(par_list[[i]])) {
                          if (is.null(prior[[par_name]])) {
                               self$prior[[par_name]] = 0
                               self$constant[[par_name]] = 0
@@ -220,6 +221,9 @@ DDM = R6::R6Class(
                     }
                }
 
+               if (is.logical(z)) {
+                    warning('Using data$Response as response boundaries, upper = 2, lower = 1', immediate. = TRUE, call. = FALSE)
+               }
 
                if (!is.null(conds)) {
                     self$conds = conds
