@@ -25,19 +25,19 @@
 #' other power posteriors.
 #' @param de_params A list containing the following options for DE-MCMC. See Turner et al. (2013) for details.
 #' * \code{b} The parameter for the uniformly distributed noise term for the DE proposal. Default is .001.
-#' * \code{migration} Circulates the states of the chains to remedy problem of outlier chains.
-#' * \code{migration.freq} Number of iterations to wait between each migration step
-#' * \code{migration.start} When to start migrating. This should be after chains are burned in.
-#' * \code{migration.end} When to stop migrating. Migration should stop well before sampling is finished.
-#' * \code{randomize_phi} Assume independence between subject and group-level parameters. Useful for improved sampling of group-level parameters.
-#' * \code{zLag} When \code{randomize_phi = TRUE} and \code{method = 'parallel'}, zLag is the number of iterations that can be reached into from the past for the z-Update.
-#' * \code{zStart} When \code{randomize_phi = TRUE} and \code{method = 'parallel'}, zStart is the iteration to begin z-Updating.
+#' * \code{migration} A \code{logical}. Indicates whether to circulate the states of the chains to remedy problem of outlier chains. Default is FALSE.
+#' * \code{migration.freq} A \code{numeric}. Number of iterations to wait between each migration step.
+#' * \code{migration.start} A \code{numeric}. Iteration to start migrating. This should be after chains are burned in.
+#' * \code{migration.end} A \code{numeric}. Iteration to stop migrating. Migration should stop well before sampling is finished.
+#' * \code{randomize_phi} A \code{logical}. Assume independence between subject and group-level parameters. Useful for improved sampling of group-level parameters. Default is FALSE.
+#' * \code{zLag} A \code{numeric}. When \code{randomize_phi = TRUE} and \code{method = 'parallel'}, zLag is the number of iterations that can be reached into from the past for the z-Update.
+#' * \code{zStart} A \code{numeric}. When \code{randomize_phi = TRUE} and \code{method = 'parallel'}, zStart is the iteration to begin z-Updating.
 #' @md
 #' @param method A character vector that specifies the type of sampling to be performed and accepts one of the following:
 #' * \code{standard} This option samples from each power posterior along the temperature schedule in sequence
 #' * \code{parallel} This option samples from each power posterior in parallel, where the target density of each chain is
 #' a power posterior at a given temperature. Using this method will cause n.chains to default to num.temps.
-#' * \code{sample.posterior} This option samples from the posterior (i.e. the power posterior where temperature = 1).
+#' * \code{posterior} This option samples from the posterior (i.e. the power posterior where temperature = 1).
 #' Although this option is useful for parameter estimation, it is not possible to obtain marginal likelihoods via this option.
 #' * \code{wbic} This option option samples from a single power posterior, where the temperature = 1/log(n) (Watanabe, 2013).
 #' @param return.samples If true, return subject and group-level samples.
