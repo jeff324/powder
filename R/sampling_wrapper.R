@@ -23,6 +23,7 @@
 #' takes some time to adapt to the new power posterior. \code{meltin} is the number of samples to discard after moving to the next
 #' power posterior. While \code{burnin} discards samples from the first power posterior, \code{meltin} discard samples for all
 #' other power posteriors.
+#' @param thin A \code{numeric}. Number of steps to thin samples by.
 #' @param de_params A list containing the following options for DE-MCMC. See Turner et al. (2013) for details.
 #' * \code{b} The parameter for the uniformly distributed noise term for the DE proposal. Default is .001.
 #' * \code{migration} A \code{logical}. Indicates whether to circulate the states of the chains to remedy problem of outlier chains. Default is FALSE.
@@ -59,12 +60,12 @@
 #' }
 #' @export
 powder <- function(model,data,num.temps=30,alpha=.3,high.temps.first=FALSE,n.sequences=1,current.sequence=1,
-                   n.samples=1000,n.chains=NULL,burnin=500,meltin=250,de_params=list(),method='standard',
+                   n.samples=1000,n.chains=NULL,burnin=500,meltin=250,thin=1,de_params=list(),method='standard',
                    return.samples=TRUE,verbose=TRUE,update=100) UseMethod("powder")
 
 #' @export
 powder.Model.Individual = function(model,data,num.temps=30,alpha=.3,high.temps.first=FALSE,n.sequences=1,current.sequence=1,
-                                   n.samples=1000,n.chains=NULL,burnin=500,meltin=250,de_params=list(),method='standard',
+                                   n.samples=1000,n.chains=NULL,burnin=500,meltin=250,thin=1,de_params=list(),method='standard',
                                    return.samples=TRUE,verbose=TRUE,update=100){
 
      theta.names = model$theta.names
@@ -179,6 +180,10 @@ powder.Model.Individual = function(model,data,num.temps=30,alpha=.3,high.temps.f
           stop('Expected data[[1]] to be a vector not a list',call. = FALSE)
      }
 
+     if (thin < 1) {
+          stop('thin must be >= 1',call. = FALSE)
+     }
+
      if (method == 'standard' | method == 'posterior' | method == 'wbic') {
           samples = standard.sampling.individual(model,data,theta.names,n.pars,temperatures,de_params,
                                                  burnin,meltin,n.samples,n.chains,method,message,
@@ -203,7 +208,7 @@ powder.Model.Individual = function(model,data,num.temps=30,alpha=.3,high.temps.f
      }
 
      if (return.samples) {
-          out = list(log.like.list=samples$log.like.list, theta=samples$theta, options=opt, model=model)
+          out = list(log.like.list=samples$log.like.list, theta=samples$theta[,,seq(1,length(samples$theta[1,1,]),by=thin)], options=opt, model=model)
           class(out) = 'Powder.Individual'
           return(out)
      } else {
@@ -217,7 +222,7 @@ powder.Model.Individual = function(model,data,num.temps=30,alpha=.3,high.temps.f
 
 #' @export
 powder.Model.Hierarchical = function(model,data,num.temps=30,alpha=.3,high.temps.first=FALSE,n.sequences=1,current.sequence=1,
-                  n.samples=1000,n.chains=NULL,burnin=500,meltin=250,
+                  n.samples=1000,n.chains=NULL,burnin=500,meltin=250,thin=1,
                   de_params=list(),method='standard',return.samples=TRUE,verbose=TRUE,update=10){
 
      theta.names = model$theta.names
@@ -376,6 +381,10 @@ powder.Model.Hierarchical = function(model,data,num.temps=30,alpha=.3,high.temps
           }
      }
 
+     if (thin < 1) {
+          stop('thin must be >= 1.',call.=FALSE)
+     }
+
      if (method == 'standard' | method == 'posterior' | method == 'wbic') {
           samples = standard.sampling.hierarchical(model,data,theta.names,n.pars,temperatures,de_params,
                                                    burnin,meltin,n.samples,n.chains,method,message,
@@ -402,7 +411,10 @@ powder.Model.Hierarchical = function(model,data,num.temps=30,alpha=.3,high.temps
           cat('\n')
      }
      if (return.samples) {
-          out = list(log.like.list=samples$log.like.list, theta=samples$theta, phi=samples$phi, options=opt, model=model)
+          out = list(log.like.list=samples$log.like.list, theta=samples$theta[,,,seq(1,length(samples$theta[1,1,1,]),by=thin)],
+                     phi=samples$phi[,,seq(1,length(samples$phi[1,1,]),by=thin)],
+                     options=opt,
+                     model=model)
           class(out) = 'Powder.Hierarchical'
           return(out)
      } else {
