@@ -201,13 +201,17 @@ DDM.Individual = R6::R6Class('Model.Individual',
               return(out)
          },
 
-         predict = function(pow.out,conds=NULL,thin=1,n=1){
+         predict = function(fit,conds=NULL,thin=1,n=1,burnin=1,n.chains=NULL){
 
-              if(is.null(conds)){
+              if (is.null(conds)) {
                    conds = self$conds
               }
 
-              out = private$predict_theta(theta=pow.out$theta,conds=conds,thin=thin,n=n)
+              if (is.null(n.chains)) {
+                    n.chains = length(fit$theta[,1,1])
+              }
+
+              out = private$predict_theta(theta=fit$theta,conds=conds,thin=thin,n=n,burnin=burnin,n.chains=n.chains)
 
               return(out)
 
@@ -304,9 +308,9 @@ DDM.Individual = R6::R6Class('Model.Individual',
               self$theta.start.points = theta.start.points
          },
 
-         predict_theta = function(theta,conds,thin,n,verbose=TRUE){
+         predict_theta = function(theta,conds,thin,n,verbose=TRUE,burnin,n.chains){
 
-              theta = private$prettify_theta(theta,conds,thin)
+              theta = private$prettify_theta(theta,conds,thin,burnin,n.chains)
 
               #add constants to theta
               if(length(self$constant) > 0){
@@ -344,8 +348,8 @@ DDM.Individual = R6::R6Class('Model.Individual',
 
          },
 
-         prettify_theta = function(theta,conds=NULL,thin=1){
-              theta = theta[,,seq(1,length(theta[1,1,]),by=thin)]
+         prettify_theta = function(theta,conds,thin,burnin,n.chains){
+              theta = theta[1:n.chains,,seq(burnin,length(theta[1,1,]),by=thin)]
               pars = colnames(theta)
               n.iter = length(theta[1,1,])
               n.chains = length(theta[,1,1])

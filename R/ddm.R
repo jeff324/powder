@@ -160,21 +160,27 @@ DDM = R6::R6Class(
                }
           },
 
-          predict = function(pow.out,conds=NULL,thin=1,n=1,subjects=NULL){
+          predict = function(fit,conds=NULL,thin=1,n=1,subjects=NULL,burnin=1,n.chains=NULL){
 
-               if(is.null(subjects)){
-                    subjects = 1:length(pow.out$theta[1,1,,1])
+               if (is.null(subjects)) {
+                    subjects = 1:length(fit$theta[1,1,,1])
                }
 
-               if(is.null(conds)){
+               if (is.null(conds)) {
                     conds = self$conds
                }
 
-               out = plyr::llply(subjects, function(x) private$predict_theta(theta=pow.out$theta[,,x,],
+               if (is.null(n.chains)) {
+                    n.chains = dim(fit$theta)[1]
+               }
+
+               out = plyr::llply(subjects, function(x) private$predict_theta(theta=fit$theta[,,x,],
                                                                              conds=conds,
                                                                              thin=thin,
                                                                              n=n,
-                                                                             verbose=FALSE),
+                                                                             verbose=FALSE,
+                                                                             burnin=burnin,
+                                                                             n.chains=n.chains),
                                  .progress='text'
                )
                out = Map(cbind,out,subject=subjects)
