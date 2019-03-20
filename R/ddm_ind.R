@@ -7,7 +7,7 @@
 #' @param a threshold seperation
 #' @param v drift rate
 #' @param t0 non-decision time
-#' @param z starting point
+#' @param z relative starting point
 #' @param st0 inter-trial-variability of non-decision time
 #' @param sv inter-trial-variability of drift rate
 #' @param sz inter-trial-variability of starting point
@@ -19,17 +19,24 @@
 #' # resonses of "2" correspond to the upper response boundary.
 #' model = DDM.Individual$new(a=T,v=T,conds=1:3)
 #'
-#' # Note, inter-trial-variability components, st0, sv, and sz
-#' # have 3 options: TRUE, FALSE, or 0. When TRUE,
+#' # Note, inter-trial-variability components, st0, sv, sz, and
+#' # start point, z, have 3 options: TRUE, FALSE, or 0. When TRUE,
 #' # they will vary across conditions. When FALSE
 #' # they are fit, but not allowed to vary across conditions.
 #' # By default, they are set to 0.
+#' # Note, when z = 0 this indicates no bias (z is internally set to .5).
 #'
 #' # st0 is a parameter, other variability parameters are 0
 #' model_st0 = DDM.Individual$new(st0=FALSE)
 #'
 #' # sv is allowed to vary over conditions
 #' model_sv = DDM.Individual$new(sv=TRUE)
+#'
+#' # by default z is internally set to .5
+#' model_v = DDM.Individual$new(v=TRUE)
+#' # the model above by default sets z to 0, which
+#' # indicates that z will be set to .5 internally.
+#'
 #'
 #'  # Setting priors:
 #'  prior = list(
@@ -43,7 +50,13 @@
 #'  # a and v vary across conditions
 #'  # sz and sv are parameters and do not vary across conditions
 #'  # st0 is 0
-#'  model = DDM.Individual$new(a=TRUE,v=TRUE)
+#'  model = DDM.Individual$new(a=TRUE,v=TRUE,sz=FALSE,sv=FALSE)
+#'
+#'  # a and v vary across conditions
+#'  # sz and sv are parameters and do not vary across conditions
+#'  # st0 is 0
+#'  # z is a fit parameter but does not vary across conditions
+#'  model = DDM.Individual$new(a=TRUE,v=TRUE,sz=FALSE,sv=FALSE,z=FALSE)
 #'
 #'  # Priors can also be changed after creating the model
 #'  model$prior$a = c(mu=2,sigma=2)
@@ -217,7 +230,7 @@ DDM.Individual = R6::R6Class('Model.Individual',
 
          },
 
-         initialize = function(a=FALSE,v=FALSE,t0=FALSE,z=0.5,sz=0,sv=0,st0=0,conds=NULL,prior=NULL){
+         initialize = function(a=FALSE,v=FALSE,t0=FALSE,z=0,sz=0,sv=0,st0=0,conds=NULL,prior=NULL){
 
               self$vary.parameter['a'] = a
               self$vary.parameter['v'] = v
