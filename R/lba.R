@@ -56,6 +56,10 @@ LBA = R6::R6Class('Model.Hierarchical',
                         sigma=c(mu=1,sigma=3))
         ),
 
+        response_name = 'Correct',
+
+        rt_name = 'Time',
+
         phi.names = NULL,
 
         phi.start.points = list(A=c(mu=2,sd=1),
@@ -92,7 +96,7 @@ LBA = R6::R6Class('Model.Hierarchical',
                   (msm::dtnorm(phi[2],prior$mu[1],prior$sigma[2],0,Inf,log=TRUE))
         },
 
-        predict = function(pow.out,conds=NULL,thin=1,n=1,subjects=NULL){
+        predict = function(pow.out,conds=NULL,thin=1,n=1,burnin=500,n.chains=NULL,subjects=NULL){
 
              if(is.null(subjects)){
                   subjects = 1:length(pow.out$theta[1,1,,1])
@@ -102,10 +106,16 @@ LBA = R6::R6Class('Model.Hierarchical',
                   conds = self$conds
              }
 
+             if (is.null(n.chains)) {
+               n.chains = dim(pow.out$theta)[1]
+             }
+
              out = plyr::llply(subjects, function(x) private$predict_theta(theta=pow.out$theta[,,x,],
                                                                       conds=conds,
                                                                       thin=thin,
                                                                       n=n,
+                                                                      burnin=burnin,
+                                                                      n.chains = n.chains,
                                                                       verbose=FALSE),
                           .progress='text'
                           )
@@ -116,13 +126,21 @@ LBA = R6::R6Class('Model.Hierarchical',
 
         },
 
-        initialize=function(A=F,b=F,vc=F,ve=F,t0=F,sve=F,conds=NULL,prior=NULL,contaminant=list()){
+        initialize=function(A=F,b=F,vc=F,ve=F,t0=F,sve=F,conds=NULL,prior=NULL,response_name=NULL,rt_name=NULL,contaminant=list()){
              self$vary.parameter['A'] = A
              self$vary.parameter['b'] = b
              self$vary.parameter['t0'] = t0
              self$vary.parameter['vc'] = vc
              self$vary.parameter['ve'] = ve
              self$vary.parameter['sve'] = sve
+
+             if (!is.null(response_name)) {
+                  self$response_name = response_name
+             }
+
+             if (!is.null(rt_name)) {
+                  self$rt_name = rt_name
+             }
 
              if (length(contaminant)!=0) {
                   if(is.null(contaminant$pct)){

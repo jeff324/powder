@@ -58,6 +58,10 @@ LBA.Individual = R6::R6Class('Model.Individual',
 
          theta.names = NULL,
 
+         response_name = 'Correct',
+
+         rt_name = 'Time',
+
          theta.start.points = c(A=1,b=1,t0=.2,vc=3,ve=2,sve=1),
 
          theta.init = function(){
@@ -120,7 +124,7 @@ LBA.Individual = R6::R6Class('Model.Individual',
                    }
 
                    tmp=data$Cond==cond
-                   tmp=private$get.dens.2choice(rt=data$Time[tmp],crct=data$Correct[tmp]==1,b=b,A=A,v=vs,s=s,t0=t0)
+                   tmp=private$get.dens.2choice(rt=data[[self$rt_name]][tmp],crct=data[[self$response_name]][tmp]==1,b=b,A=A,v=vs,s=s,t0=t0)
 
                    ## density contamination
                    if (self$contaminant$pct > 0) {
@@ -135,25 +139,37 @@ LBA.Individual = R6::R6Class('Model.Individual',
                return(out)
          },
 
-         predict = function(pow.out,conds=NULL,thin=1,n=1){
+         predict = function(pow.out,conds=NULL,thin=1,n=1,burnin=500,n.chains=NULL,verbose=F){
+
+              if (is.null(n.chains)) {
+                    n.chains = dim(pow.out$theta)[1]
+              }
 
               if(is.null(conds)){
                    conds = self$conds
               }
 
-              out = private$predict_theta(theta=pow.out$theta,conds=conds,thin=thin,n=n)
+              out = private$predict_theta(theta=pow.out$theta,conds=conds,thin=thin,n=n,burnin=burnin,n.chains=n.chains,verbose=verbose)
 
               return(out)
 
          },
 
-        initialize = function(A=F,b=F,vc=F,ve=F,t0=F,sve=F,conds=NULL,prior=NULL,contaminant=list()){
+        initialize = function(A=F,b=F,vc=F,ve=F,t0=F,sve=F,conds=NULL,prior=NULL,response_name=NULL,rt_name=NULL,contaminant=list()){
              self$vary.parameter['A'] = A
              self$vary.parameter['b'] = b
              self$vary.parameter['t0'] = t0
              self$vary.parameter['vc'] = vc
              self$vary.parameter['ve'] = ve
              self$vary.parameter['sve'] = sve
+
+             if (!is.null(response_name)) {
+               self$response_name = response_name
+             }
+
+             if (!is.null(rt_name)) {
+               self$rt_name = rt_name
+             }
 
              if (length(contaminant)!=0) {
                   if(is.null(contaminant$pct)){
@@ -197,9 +213,9 @@ LBA.Individual = R6::R6Class('Model.Individual',
               self$theta.start.points = unlist(start.points)
          },
 
-         predict_theta = function(theta,conds=NULL,thin=1,n=1,verbose=TRUE){
+         predict_theta = function(theta,conds,thin,n,burnin,n.chains,verbose){
 
-              theta = private$prettify_theta(theta,conds,thin)
+              theta = private$prettify_theta(theta,conds,thin,burnin,n.chains)
 
               if(verbose){
                    progress_type = 'text'
@@ -222,8 +238,8 @@ LBA.Individual = R6::R6Class('Model.Individual',
 
          },
 
-         prettify_theta = function(theta,conds=NULL,thin=1){
-              theta = theta[,,seq(1,length(theta[1,1,]),by=thin)]
+         prettify_theta = function(theta,conds,thin,burnin,n.chains){
+              theta = theta[1:n.chains,,seq(burnin,length(theta[1,1,]),by=thin)]
               pars = colnames(theta)
               n.iter = length(theta[1,1,])
               n.chains = length(theta[,1,1])
