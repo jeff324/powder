@@ -54,8 +54,7 @@
 #' model = LBA.Individual$new(b=T)
 #' data('individual',package='powder')
 #' pow.out = powder(data=individual, model=model, num.temps=30)
-#' est = marginal.likelihood(pow.out)
-#' print(est)
+#' summary(pow.out)
 #' }
 #' @export
 powder <- function(model,data,num.temps=30,alpha=.3,high.temps.first=FALSE,n.sequences=1,current.sequence=1,

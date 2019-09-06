@@ -91,7 +91,6 @@ Note, if \code{return.samples = FALSE} then only \code{log.like.list} will be re
 model = LBA.Individual$new(b=T)
 data('individual',package='powder')
 pow.out = powder(data=individual, model=model, num.temps=30)
-est = marginal.likelihood(pow.out)
-print(est)
+summary(pow.out)
 }
 }
